@@ -98,6 +98,8 @@ qqPlot(lm(soil2007$alkali.hydrolyzale_nitrogen ~ soil2007$depth), simulate=TRUE,
 #how to extract subset data?
 #https://zhuanlan.zhihu.com/p/23824657
 
+#I make some change here.2021/12/22
+
 
 
 
