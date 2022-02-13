@@ -1,4 +1,4 @@
-# The rodent diet
+# The rodent diet analysis
 
 This project is basically for building up a workflow of small rodent diet analysis,
 focusing on:
