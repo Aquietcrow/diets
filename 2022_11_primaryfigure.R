@@ -1,6 +1,8 @@
 #install.packages("RODBC")
 #install.packages("doBy")
 #install.packages("plotrix")
+#install.packages("lubridate")
+install.packages("purrr")
 #[ctrl + shift + c] can make notes.
 #"RODBC" for Microsoft Access
 #"ade4" for Monte-Carlo Test
@@ -12,11 +14,12 @@ library("reshape2")
 library("ggplot2")
 library("lattice")
 library("plotrix")
-
+library("lubridate")
+library("purrr")
 #Input data
 SummerHenan2021<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
-PatchCover2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
-SpeCov2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
+PatchCover2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
+SpeCov2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
 Biomas2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_biomass")
 spe_plantnames <- sqlFetch(SummerHenan2021,"2021_summer_henan_speciesname")
 spe_plantnames_rightorder<-spe_plantnames[order(spe_plantnames[,1]),]
@@ -24,9 +27,61 @@ spe_plantnames_rightorder<-spe_plantnames[order(spe_plantnames[,1]),]
 # View(bioma)
 # View(bioma_subset1)
 # spe_plantnames_rightorder$Chinesename==colnames(SpeCov2021)[8:114]
-colnames(SpeCov2021)[8:114]<-spe_plantnames_rightorder$Latinname
+colnames(SpeCov2021_22)[8:114]<-spe_plantnames_rightorder$Latinname
 # str(spe_plant)
-View(SpeCov2021)
+View(SpeCov2021_22)
+date1<-as.Date('2022-01-01')
+#"Ops.POSIXt", "Ops.Date"
+#Failedfield<-c("42c","42t","43c","43t")
+SpeCov2021<-subset(SpeCov2021_22,SpeCov2021_22$time < date1)
+# FailedfieldNo1<-grep("42c",SpeCov2021$fieldcode,fixed = TRUE)
+# FailedfieldNo2<-grep("42t",SpeCov2021$fieldcode,fixed = TRUE)
+# FailedfieldNo3<-grep("43c",SpeCov2021$fieldcode,fixed = TRUE)
+# FailedfieldNo4<-grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
+# FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
+SpeCov2021new<-SpeCov2021[-FailedfieldNoall,]
+# View(SpeCov2021new_base)
+SpeCov2021new_base <- subset(SpeCov2021new,SpeCov2021new$functionalgroup == "base")
+SpeCov2021new_Ligularia <- subset(SpeCov2021new,SpeCov2021new$functionalgroup == "Ligularia_sp")
+
+View(SpeCov2021new_Ligularia)
+
+CountPatch <- function(x,n,m,FieCodeInput,PatchType,NumOfPatch = 0){
+  for(n in 1:nrow(x)){
+    for(m in 7:ncol(x)){
+      if(x[n,m]==PatchType){
+        NumOfPatch<-NumOfPatch+1
+        m<- m+1
+      } 
+      else{
+        NumOfPatch<-NumOfPatch
+        m<-m+1
+      }
+    }
+  }
+  return()
+  write.csv(fieldcode,PatchType,NumOfPatch)
+}
+
+func_occur<-function(x,m,n,sum_occur=0){
+  for(n in 4:ncol(x)){
+    for(m in 1:nrow(x)){
+      if(x[m,n]!=0){
+        sum_occur<-sum_occur+1
+        m<-m+1}
+      else{
+        sum_occur<-sum_occur
+        m<-m+1}
+    }
+    spe_occur[n-3,2]<-sum_occur/382*100
+    spe_occur[n-3,1]<-colnames(spe)[n]
+    sum_occur<-0
+    n=n+1
+  }
+  return(spe_occur)
+}
+View(PatchCover2021_22)
+# rm("Failedfield","FailedfieldNo")
 
 ############################################################
 #Using data with Ligularia_sp from 2022 March
@@ -50,15 +105,11 @@ ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+geom_col()+theme(axis
 # barplot(df_yx2$spe_cov_ave,main="Average coverage",xlab="Plant species", ylab = "Cover", horiz = TRUE,names.arg = df_yx2$spe_name)
 # barplot(df_yx3$spe_num, main="Occurrence frequency", xlab = "Plant species", ylab = "Frequency", horiz = FALSE)
 
-
-
-
 ##############################################
 #%subset the poisonous plant plots% 2022 11 18
 ##############################################
 str(PatchCover2021)
 head(PatchCover2021)
-
 
 ##################################################################
 # Goal_Subset_Omit every row that satisfy bioma$functionalgroup = "bare"
