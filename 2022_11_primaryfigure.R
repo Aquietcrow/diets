@@ -56,22 +56,16 @@ View(SpeCov2021new_Ligularia)
 is.na(PatchCover2021[,7:56])<-"A"
 View(PatchCover2021)
 
-reNaTA <- function(x,n,m,na.omit=FALSE){
-  for( n in 1:nrow(x)){
-    for( m in 7:ncol(x)){
-      if (is.na(x[n,m])==TRUE){
-        x[n,m]<- "A"
-      }
-      else{
-        m<-m+1
-      }
-
-    }
-    n<-n+1
-  } 
+reNaTA <- function(x,n,m,na.omit=FALSE)
+  {for( n in 1:nrow(x))
+    {for( m in 7:ncol(x))
+      {if (is.na(x[n,m])==TRUE)
+        {x[n,m]<- "A"}
+      else
+        {m<-m+1}}
+    n<-n+1} 
   result<- as.data.frame(x)
-  return(result)
-}
+  return(result)}
 
 #how to get the new data.frame?
 
@@ -81,56 +75,47 @@ PatchCo2021Reorder<-PatchCover2021new[order(PatchCover2021new[,1]),]
 
 
 
-
 ######################################################
 #Ugly loop statement
 ######################################################
-# CountPatch <- function(x,n,m,FieCodeInput,PatchType,NumOfPatch,na.omit=FALSE){
-#   for(n in 1:nrow(x)){
-#     for(m in 7:ncol(x)){
-#       if(x[n,m-5]==FieCodeInput){
-#         if(x[n,m]==PatchType){
-#           NumOfPatch<-NumOfPatch+1
-#           m<- m+1
-#         }
-#         else{
-#           NumOfPatch<-NumOfPatch
-#           m<-m+1
-#         }
-#       }
-#       else n<n+1
-#     }
-#     n<-n+1
-#   }
-#   return(NumOfPatch)
-# }
-
-# CountPatch(x=PatchCo2021Reorder,n=1,m=7,FieCodeInput="1c",PatchType ="C",NumOfPatch = 0)
-
-# func_occur<-function(x,m,n,sum_occur=0){
-#   for(n in 4:ncol(x)){
-#     for(m in 1:nrow(x)){
-#       if(x[m,n]!=0){
-#         sum_occur<-sum_occur+1
-#         m<-m+1}
-#       else{
-#         sum_occur<-sum_occur
-#         m<-m+1}
-#     }
-#     spe_occur[n-3,2]<-sum_occur/382*100
-#     spe_occur[n-3,1]<-colnames(spe)[n]
-#     sum_occur<-0
-#     n=n+1
-#   }
-#   return(spe_occur)
-# }
-# View(PatchCover2021_22)
-
-# rm("Failedfield","FailedfieldNo")
+CountPatch <- function(x,numA,numB,numC,na.omit=FALSE)
+  {for(n in 1:nrow(x))
+    {for(m in 7:56)
+      {if(x[n,m]=="A")
+        {numA<-numA+1;
+        m<-m+1}
+      else if(x[n,m]=="B")
+        {numB<-numB+1;
+          m<-m+1}
+      else if(x[n,m]=="C")
+        {numC<-numC+1
+        m<-m+1}
+      else
+        {m<-m+1}}
+    x$NumA[n]<-numA;
+    x$NumB[n]<-numB;
+    x$NumC[n]<-numC;
+    numA<-0;
+    numB<-0;
+    numC<-0;
+    n<n+1}
+  return(x)}
 
 
+PatchCo2021Counted<-CountPatch(x=PatchCo2021Reorder,numA = 0,numB = 0,numC = 0) 
+  
+apply(PatchCo2021Counted[,c(57,58,59)],2,sum)
+  
+  
+  
+  
+  
+  
+  
+  
 
 
+###################################################################
 ############################################################
 #Using data with Ligularia_sp from 2022 March
 ############################################################
