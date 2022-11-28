@@ -2,7 +2,7 @@
 #install.packages("doBy")
 #install.packages("plotrix")
 #install.packages("lubridate")
-install.packages("purrr")
+#install.packages("purrr")
 #[ctrl + shift + c] can make notes.
 #"RODBC" for Microsoft Access
 #"ade4" for Monte-Carlo Test
@@ -16,9 +16,13 @@ library("lattice")
 library("plotrix")
 library("lubridate")
 library("purrr")
+
+
 #Input data
+#ls()
+#rm()
 SummerHenan2021<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
-PatchCover2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
+PatchCover2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
 SpeCov2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
 Biomas2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_biomass")
 spe_plantnames <- sqlFetch(SummerHenan2021,"2021_summer_henan_speciesname")
@@ -41,47 +45,91 @@ SpeCov2021<-subset(SpeCov2021_22,SpeCov2021_22$time < date1)
 # FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
 SpeCov2021new<-SpeCov2021[-FailedfieldNoall,]
 # View(SpeCov2021new_base)
-SpeCov2021new_base <- subset(SpeCov2021new,SpeCov2021new$functionalgroup == "base")
+SpeCov2021new_base<-subset(SpeCov2021new,SpeCov2021new$functionalgroup == "base")
 SpeCov2021new_Ligularia <- subset(SpeCov2021new,SpeCov2021new$functionalgroup == "Ligularia_sp")
 
 View(SpeCov2021new_Ligularia)
+#A:base land
+#B:bare land
+#C:Ligularia_sp land
+#dim()
+is.na(PatchCover2021[,7:56])<-"A"
+View(PatchCover2021)
 
-CountPatch <- function(x,n,m,FieCodeInput,PatchType,NumOfPatch = 0){
-  for(n in 1:nrow(x)){
-    for(m in 7:ncol(x)){
-      if(x[n,m]==PatchType){
-        NumOfPatch<-NumOfPatch+1
-        m<- m+1
-      } 
+reNaTA <- function(x,n,m,na.omit=FALSE){
+  for( n in 1:nrow(x)){
+    for( m in 7:ncol(x)){
+      if (is.na(x[n,m])==TRUE){
+        x[n,m]<- "A"
+      }
       else{
-        NumOfPatch<-NumOfPatch
         m<-m+1
       }
+
     }
-  }
-  return()
-  write.csv(fieldcode,PatchType,NumOfPatch)
+    n<-n+1
+  } 
+  result<- as.data.frame(x)
+  return(result)
 }
 
-func_occur<-function(x,m,n,sum_occur=0){
-  for(n in 4:ncol(x)){
-    for(m in 1:nrow(x)){
-      if(x[m,n]!=0){
-        sum_occur<-sum_occur+1
-        m<-m+1}
-      else{
-        sum_occur<-sum_occur
-        m<-m+1}
-    }
-    spe_occur[n-3,2]<-sum_occur/382*100
-    spe_occur[n-3,1]<-colnames(spe)[n]
-    sum_occur<-0
-    n=n+1
-  }
-  return(spe_occur)
-}
-View(PatchCover2021_22)
+#how to get the new data.frame?
+
+PatchCover2021new<-reNaTA(PatchCover2021,1,7)
+View(PatchCover2021new)
+PatchCo2021Reorder<-PatchCover2021new[order(PatchCover2021new[,1]),]
+
+
+
+
+######################################################
+#Ugly loop statement
+######################################################
+# CountPatch <- function(x,n,m,FieCodeInput,PatchType,NumOfPatch,na.omit=FALSE){
+#   for(n in 1:nrow(x)){
+#     for(m in 7:ncol(x)){
+#       if(x[n,m-5]==FieCodeInput){
+#         if(x[n,m]==PatchType){
+#           NumOfPatch<-NumOfPatch+1
+#           m<- m+1
+#         }
+#         else{
+#           NumOfPatch<-NumOfPatch
+#           m<-m+1
+#         }
+#       }
+#       else n<n+1
+#     }
+#     n<-n+1
+#   }
+#   return(NumOfPatch)
+# }
+
+# CountPatch(x=PatchCo2021Reorder,n=1,m=7,FieCodeInput="1c",PatchType ="C",NumOfPatch = 0)
+
+# func_occur<-function(x,m,n,sum_occur=0){
+#   for(n in 4:ncol(x)){
+#     for(m in 1:nrow(x)){
+#       if(x[m,n]!=0){
+#         sum_occur<-sum_occur+1
+#         m<-m+1}
+#       else{
+#         sum_occur<-sum_occur
+#         m<-m+1}
+#     }
+#     spe_occur[n-3,2]<-sum_occur/382*100
+#     spe_occur[n-3,1]<-colnames(spe)[n]
+#     sum_occur<-0
+#     n=n+1
+#   }
+#   return(spe_occur)
+# }
+# View(PatchCover2021_22)
+
 # rm("Failedfield","FailedfieldNo")
+
+
+
 
 ############################################################
 #Using data with Ligularia_sp from 2022 March
