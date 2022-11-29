@@ -1,11 +1,21 @@
-#install.packages("RODBC")
-#install.packages("doBy")
-#install.packages("plotrix")
-#install.packages("lubridate")
-#install.packages("purrr")
-#[ctrl + shift + c] can make notes.
-#"RODBC" for Microsoft Access
-#"ade4" for Monte-Carlo Test
+install.packages("RODBC")
+install.packages("ade4")
+install.packages("vegan")
+install.packages("reshape2")
+install.packages("ggplot2")
+install.packages("lattice")
+install.packages("plotrix")
+install.packages("lubridate")
+install.packages("purrr")
+install.packages("sqldf")
+# [ctrl + shift + c] can make notes.
+# "RODBC" for Microsoft Access
+# "ade4" for Monte-Carlo Test
+# .libPaths()
+# "sqldf" for using SQLite language
+"C:/Users/oh_my/AppData/Local/R/win-library/4.2"
+"C:/Program Files/R/R-4.2.2/library" 
+
 
 library("RODBC")
 library("ade4")
@@ -16,11 +26,11 @@ library("lattice")
 library("plotrix")
 library("lubridate")
 library("purrr")
+library("sqldf")
 
-
-#Input data
-#ls()
-#rm()
+# Input data
+# ls()
+# rm()
 SummerHenan2021<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
 PatchCover2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
 SpeCov2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
@@ -52,7 +62,7 @@ View(SpeCov2021new_Ligularia)
 #A:base land
 #B:bare land
 #C:Ligularia_sp land
-#dim()
+#dim() for check data structure
 is.na(PatchCover2021[,7:56])<-"A"
 View(PatchCover2021)
 
@@ -72,8 +82,6 @@ reNaTA <- function(x,n,m,na.omit=FALSE)
 PatchCover2021new<-reNaTA(PatchCover2021,1,7)
 View(PatchCover2021new)
 PatchCo2021Reorder<-PatchCover2021new[order(PatchCover2021new[,1]),]
-
-
 
 ######################################################
 #Ugly loop statement
@@ -103,15 +111,23 @@ CountPatch <- function(x,numA,numB,numC,na.omit=FALSE)
 
 
 PatchCo2021Counted<-CountPatch(x=PatchCo2021Reorder,numA = 0,numB = 0,numC = 0) 
-  
-apply(PatchCo2021Counted[,c(57,58,59)],2,sum)
-  
-  
-  
-  
-  
-  
-  
+
+attach(PatchCo2021Counted)
+detach(PatchCo2021Counted)
+NumASum <-aggregate(PatchCo2021Counted$NumA~fieldcode,data = PatchCo2021Counted,sum)
+NumBSum <-aggregate(PatchCo2021Counted$NumB~fieldcode,data = PatchCo2021Counted,sum) 
+NumCSum <-aggregate(PatchCo2021Counted$NumC~fieldcode,data = PatchCo2021Counted,sum) 
+
+x1<-merge(NumASum,NumBSum,by="fieldcode")
+x2<-merge(x1,NumCSum,by="fieldcode")
+colnames(x2)[3]<-"NumB"
+colnames(x2)[4]<-"NumC"
+x2$NumAPer<-x2$NumA/2500  
+x2$NumBPer<-x2$NumB/2500
+x2$NumCPer<-x2$NumC/2500
+apply(x2[,5:7],2,range)  
+apply(x2[,5:7],2,mean)  
+PatchCo2021Per<-x2  
   
 
 
@@ -141,8 +157,7 @@ ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+geom_col()+theme(axis
 ##############################################
 #%subset the poisonous plant plots% 2022 11 18
 ##############################################
-str(PatchCover2021)
-head(PatchCover2021)
+
 
 ##################################################################
 # Goal_Subset_Omit every row that satisfy bioma$functionalgroup = "bare"
@@ -185,6 +200,13 @@ bioma_nobare$treatment
 
 bioma_nobare$totalbiomass(g) <- bioma_nobare$`grass(g)` + bioma_nobare$`sedge(g)`+ bioma_nobare$`legume(g)`+bioma_nobare$`forb(g)` + bioma_nobare$`poisonousplants(g)`
 
+###########################################################
+#turn the string(chr) to factor
+##########################################################
+bioma_nobare$fieldcode <- as.character(bioma_nobare$fieldcode)
+bioma_nobare$field.no <- as.factor(bioma_nobare$field.no)
+bioma_nobare$treatment <- as.factor(bioma_nobare$treatment)
+#NOTE: Some sites do have NA. I should check before I compare these sites with the other sites.
 
 ##############################################################
 #delete environmental variables 
@@ -202,10 +224,13 @@ bioma_nobare$totalbiomass(g) <- bioma_nobare$`grass(g)` + bioma_nobare$`sedge(g)
 #Frequency distribution histogram of total biomass
 #Frequency distribution histogram of grass/sedges/legumes/forbs/poisonous plants/litter
 
-#colnames(bioma_nobare) [15]<-"totalbiomass(g)"
+# colnames(bioma_nobare) [15]<-"totalbiomass(g)"
 
-#To test the normality of data
- hist(bioma_nobare$`grass(g)`)
+############################################################
+# To test the normality of data
+############################################################
+
+# hist(bioma_nobare$`grass(g)`)
 # hist(bioma_nobare$`sedge(g)`)
 # hist(bioma_nobare$`legume(g)`)
 # hist(bioma_nobare$`forb(g)`)
@@ -223,13 +248,6 @@ bioma_nobare$totalbiomass(g) <- bioma_nobare$`grass(g)` + bioma_nobare$`sedge(g)
 ###########################################################
  
 
-###########################################################
-#turn the string(chr) to factor
- ##########################################################
-bioma_nobare$fieldcode <- as.character(bioma_nobare$fieldcode)
-bioma_nobare$field.no <- as.factor(bioma_nobare$field.no)
-bioma_nobare$treatment <- as.factor(bioma_nobare$treatment)
-#NOTE: Some sites do have NA. I should check before I compare these sites with the other sites.
 
 ##############################################################
 #p135 <R in Action 2nd> in Chinese
@@ -238,9 +256,9 @@ bioma_nobare$treatment <- as.factor(bioma_nobare$treatment)
 mystats <- function(x, na.omit=FALSE){
   if(na.omit)
     x <- x[!is.na(x)]
-  m <- mean(x)
-  n <-length(x)
-  s <-sd(x)/sqrt(n)
+    m <- mean(x)
+    n <-length(x)
+    s <-sd(x)/sqrt(n)
   return(c(n=n,mean=m,se=s))
 }
 
@@ -249,7 +267,7 @@ dstats <- function(x) sapply(x,mystats)
 mylist <-c("grass(g)","sedge(g)","legume(g)","forb(g)","poisonousplants(g)","litter(g)","totalbiomass(g)")
 
 by(bioma_nobare[mylist],bioma_nobare$fieldcode,dstats)
-
+# with()
 ##############################################################
 #Q: how to set the decimal to 0.01g 0.01g.
 #To get the field number.
@@ -259,7 +277,9 @@ by(bioma_nobare[mylist],bioma_nobare$fieldcode,dstats)
 ##############################################################
 #two-way anova
 # ok, now do a 2-way ANOVA, or GLM, with as factor field, treatment, and field*treatment, and as dependent total biomass, then thee same for grass, etc.
+# aggregate group function
 ##############################################################
+
 attach(bioma_nobare)
 aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=mean)
 aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=sd)
@@ -301,10 +321,8 @@ View(spe_henan_notbare)#382*106
 #then make a boxplot
 #I can use some common methods in microbiological analysis.
 #Turn all data NA to 0
-boxplot(spe_henan_Ligularia_sp[8:106])
-boxplot(spe_henan_Oxytropis_sp[8:106])
-boxplot(spe_henan_base[8:106])
-boxplot(spe_henan_bare[8:106])
+# boxplot(spe_henan_Ligularia_sp[8:106])
+
 
 #summary(colnames(spe_henan_notbare)[8:106] == colnames(spe_henan_notbare_NA)[1:99])
 #summary(rownames(spe_henan_notbare)[1:382] == rownames(spe_henan_notbare_NA)[1:382])
@@ -394,6 +412,15 @@ func_occur_NA<-function(x,m,n,sum_occur=0){
 
 #rm(spe_col)
 #rm(spe_num)
+
+#2022 11 29 it should only contain "base" category 
+
+#recalculate the frequency and average cover data
+
+
+
+
+
 spe_fre<-func_occur(spe,1,4)
 spe_fre_haveNA<-func_occur_NA(spe_henan_notbare_NA,1,8)
 # 100-sum(spe$Oxytropis_ochrocephala==0)/382*100
