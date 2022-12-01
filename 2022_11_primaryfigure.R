@@ -13,8 +13,8 @@ install.packages("sqldf")
 # "ade4" for Monte-Carlo Test
 # .libPaths()
 # "sqldf" for using SQLite language
-"C:/Users/oh_my/AppData/Local/R/win-library/4.2"
-"C:/Program Files/R/R-4.2.2/library" 
+# "C:/Users/oh_my/AppData/Local/R/win-library/4.2"
+# "C:/Program Files/R/R-4.2.2/library" 
 
 
 library("RODBC")
@@ -31,6 +31,7 @@ library("sqldf")
 # Input data
 # ls()
 # rm()
+
 SummerHenan2021<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
 PatchCover2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
 SpeCov2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
@@ -128,9 +129,51 @@ x2$NumCPer<-x2$NumC/2500
 apply(x2[,5:7],2,range)  
 apply(x2[,5:7],2,mean)  
 PatchCo2021Per<-x2  
-  
+
+subplot_Ligularia<-SpeCov2021new_Ligularia$subplot  
+subplot_base<-SpeCov2021new_base$subplot
+# subplot_bioma<-bioma_nobare2021$subplot
+subplot_bioma1<-subplot_bioma[-number1]
+
+# result1<-(subplot_bioma1 %in% subplot_comb)
+# number1<-grep(FALSE,result1,fixed = TRUE)
+spe<-subset(spe_henan_notbare,select = spe_sub)
+bioma_nobare2021
 
 
+Func_Oxytro_No<-grep("Oxytropis_sp",SpeCov2021new$functionalgroup,fixed = TRUE)
+a1<-SpeCov2021new[-Func_Oxytro_No,]
+# 228+103=331
+subplot_comb<-c(subplot_base,subplot_Ligularia)
+View(subplot_comb)
+subplot_all<-a1[,1:4]
+
+# "30t-4q-3" is bare land, so has no data;"52-2c-1q-3","15-1c-2q-2" ,"15-1c-3q-1","15-1c-3q-3","15-1c-4q-3","15-1t-1q-3","15-1t-2q-1","15-1t-3q-1","15-1t-4q-2","15-2c-1q-2" are Oxytropis_sp,but this type is not investigated in every field,exclude this type of biomass data, in case these data will lead to bias in the biomass(2022-11-30).        
+
+FailedfieldNo1<-grep("42c",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNo2<-grep("42t",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNo3<-grep("43c",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNo4<-grep("43t",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
+bioma_nobare2021<-bioma_nobare[-FailedfieldNoall,]
+bioma_all2021<-merge(subplot_all,bioma_nobare2021,by="subplot")
+a<-c(1,2,3,4,8,11:19)
+bioma_all2021clean<-bioma_all2021[,a]
+
+reNaT0 <- function(x,na.omit=FALSE)
+{for( n in 1:nrow(x))
+{for( m in 7:ncol(x))
+{if (is.na(x[n,m])==TRUE)
+{x[n,m]<- 0}
+  else
+  {m<-m+1}}
+  n<-n+1} 
+  result<-x
+  return(result)}
+
+SpeCov2021new_base_clean<-reNaT0(SpeCov2021new_base)
+
+SpeCov2021new_Ligularia_clean<-reNaT0(SpeCov2021new_Ligularia)
 ###################################################################
 ############################################################
 #Using data with Ligularia_sp from 2022 March
@@ -147,9 +190,23 @@ PatchCo2021Per<-x2
 
 
 # Draw the graph
-ggplot(df_yx2,aes(x=reorder(spe_name,-spe_cov_ave),y=spe_cov_ave))+geom_col()+theme(axis.text.x=element_text(angle = 45, vjust = 1, hjust = 1,size=12,face = "bold"))+theme(axis.text.y = element_text(size=12, face="bold"))+xlab("Plant species")+ylab("Species average coverage")+theme(axis.title.x = element_text(vjust = 2,size=14,face="bold"))+theme(axis.title.y = element_text(vjust=2,size=14,face = "bold"))
+ggplot(df_yx2,aes(x=reorder(spe_name,-spe_cov_ave),y=spe_cov_ave))+
+  geom_col()+
+  theme(axis.text.x=element_text(angle = 45, vjust = 1, hjust = 1,size=12,face = "bold"))+
+  theme(axis.text.y = element_text(size=12, face="bold"))+
+  xlab("Plant species")+
+  ylab("Species average coverage")+
+  theme(axis.title.x = element_text(vjust = 2,size=14,face="bold"))+
+  theme(axis.title.y = element_text(vjust=2,size=14,face = "bold"))
 
-ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+geom_col()+theme(axis.text.x=element_text(angle = 45, vjust = 1, hjust = 1,size=12,face = "bold"))+theme(axis.text.y = element_text(size=12, face="bold"))+xlab("Plant species")+ylab("Occurrence frequency")+theme(axis.title.x = element_text(vjust = 2,size=14,face="bold"))+theme(axis.title.y = element_text(vjust=2,size=14,face = "bold"))
+ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+
+  geom_col()+
+  theme(axis.text.x=element_text(angle = 45, vjust = 1, hjust = 1,size=12,face = "bold"))+
+  theme(axis.text.y = element_text(size=12, face="bold"))+
+  xlab("Plant species")+
+  ylab("Occurrence frequency")+
+  theme(axis.title.x = element_text(vjust = 2,size=14,face="bold"))+
+  theme(axis.title.y = element_text(vjust=2,size=14,face = "bold"))
 
 # barplot(df_yx2$spe_cov_ave,main="Average coverage",xlab="Plant species", ylab = "Cover", horiz = TRUE,names.arg = df_yx2$spe_name)
 # barplot(df_yx3$spe_num, main="Occurrence frequency", xlab = "Plant species", ylab = "Frequency", horiz = FALSE)
@@ -255,7 +312,7 @@ bioma_nobare$treatment <- as.factor(bioma_nobare$treatment)
 ##############################################################
 mystats <- function(x, na.omit=FALSE){
   if(na.omit)
-    x <- x[!is.na(x)]
+    x <- x[!is.na(x)]#the data which not NA#
     m <- mean(x)
     n <-length(x)
     s <-sd(x)/sqrt(n)
@@ -300,17 +357,6 @@ fit_bioma_nobare_tb <- aov(bioma_nobare$`totalbiomass(g)`~treatment*field.no)
 summary(fit_bioma_nobare_tb)
 
 
-#spe_henan_notbare <- subset(spe_henan,spe_henan$functionalgroup != "bare")
-spe_henan_base <- subset(spe_henan,spe_henan$functionalgroup == "base")
-spe_henan_Ligularia_sp <- subset(spe_henan,spe_henan$functionalgroup == "Ligularia_sp")
-spe_henan_Oxytropis_sp <- subset(spe_henan,spe_henan$functionalgroup == "Oxytropis_sp")
-spe_henan_bare <- subset(spe_henan,spe_henan$functionalgroup == "bare")
-
-#str(spe_henan_notbare)#382*106
-str(spe_henan_base)#252
-str(spe_henan_Ligularia_sp)#119
-str(spe_henan_Oxytropis_sp)#11
-
 #spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
 str(spe_henan_bare)#84*106
 str(spe_henan)#467*106, one row is NA.
@@ -324,13 +370,10 @@ View(spe_henan_notbare)#382*106
 # boxplot(spe_henan_Ligularia_sp[8:106])
 
 
-#summary(colnames(spe_henan_notbare)[8:106] == colnames(spe_henan_notbare_NA)[1:99])
-#summary(rownames(spe_henan_notbare)[1:382] == rownames(spe_henan_notbare_NA)[1:382])
-
 #spe_henan_notbare_NA has NA in data set.
 #spe_henan_notbare is without NA in data set.
 #spe_henan_notbare_data is pure data without other field information.
-spe_henan_notbare_NA <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
+spe_henan_notbare_NA <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)#cbind, combine according to columns
 
 spe_henan_notbare_data <- spe_henan_notbare_NA[8:106]
 spe_henan_notbare_data [is.na(spe_henan_notbare_data[1:99])==TRUE] <- 0
@@ -414,7 +457,6 @@ func_occur_NA<-function(x,m,n,sum_occur=0){
 #rm(spe_num)
 
 #2022 11 29 it should only contain "base" category 
-
 #recalculate the frequency and average cover data
 
 
@@ -441,7 +483,7 @@ head(spe_cov_ave)
 spe_name<-colnames(spe)[4:102]
 #Succeed
 spe_covave<-data.frame(spe_cov_ave,spe_name,spe_cov_se)
-summary(spe_cov_ave==spe_covave$spe_cov_ave)
+summary(spe_cov_ave==spe_covave$spe_cov_ave)#check if the vector is equal to the column.
 summary(names(spe_cov_ave)==spe_covave$spe_name)
 #options(scipen = 200)
 #View(spe_covave)
@@ -449,14 +491,10 @@ summary(names(spe_cov_ave)==spe_covave$spe_name)
 spe_covave_order<-spe_covave[order(spe_covave[,1],decreasing = T),]
 
 
-
+#export the data set.
 write.csv(spe_covave_order, file = "spe_covave_order.csv",row.names = TRUE)
-
 write.csv(spe_fre_order,file = "spe_fre_order.csv",row.names = TRUE)
 
-
-#ggplot2 practice
-# ggplot(mpg, aes(hwy, cty)) +  geom_point(aes(color = cyl))+ geom_smooth(method="lm") +coord_cartesian()+scale_color_gradient()+theme_bw()
 
 
 
