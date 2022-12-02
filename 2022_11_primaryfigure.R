@@ -15,8 +15,6 @@ install.packages("sqldf")
 # "sqldf" for using SQLite language
 # "C:/Users/oh_my/AppData/Local/R/win-library/4.2"
 # "C:/Program Files/R/R-4.2.2/library" 
-
-
 library("RODBC")
 library("ade4")
 library("vegan")
@@ -27,11 +25,9 @@ library("plotrix")
 library("lubridate")
 library("purrr")
 library("sqldf")
-
 # Input data
 # ls()
 # rm()
-
 SummerHenan2021<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
 PatchCover2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
 SpeCov2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
@@ -337,24 +333,28 @@ by(bioma_nobare[mylist],bioma_nobare$fieldcode,dstats)
 # aggregate group function
 ##############################################################
 
-attach(bioma_nobare)
-aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=mean)
-aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=sd)
+attach(bioma_all2021clean)
+# detach()
 
-fit_bioma_nobare_grass <- aov(bioma_nobare$`grass(g)`~treatment*field.no)
-summary(fit_bioma_nobare_grass)
-fit_bioma_nobare_sedge <- aov(bioma_nobare$`sedge(g)`~treatment*field.no)
-summary(fit_bioma_nobare_sedge)
-fit_bioma_nobare_legume <- aov(bioma_nobare$`legume(g)`~treatment*field.no)
-summary(fit_bioma_nobare_legume)
-fit_bioma_nobare_forb <- aov(bioma_nobare$`forb(g)`~treatment*field.no)
-summary(fit_bioma_nobare_forb)
-fit_bioma_nobare_pp <- aov(bioma_nobare$`poisonousplants(g)`~treatment*field.no)
-summary(fit_bioma_nobare_pp)
-fit_bioma_nobare_litter <- aov(bioma_nobare$`litter`~treatment*field.no)
-summary(fit_bioma_nobare_litter)
-fit_bioma_nobare_tb <- aov(bioma_nobare$`totalbiomass(g)`~treatment*field.no)
-summary(fit_bioma_nobare_tb)
+aggregate(bioma_all2021clean[mylist],by=list(field.no,treatment), FUN=mean)
+aggregate(bioma_all2021clean[mylist],by=list(field.no), FUN=mean)
+aggregate(bioma_all2021clean[mylist],by=list(treatment), FUN=mean)                     
+# aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=sd)
+# 
+# fit_bioma_nobare_grass <- aov(bioma_nobare$`grass(g)`~treatment*field.no)
+# summary(fit_bioma_nobare_grass)
+# fit_bioma_nobare_sedge <- aov(bioma_nobare$`sedge(g)`~treatment*field.no)
+# summary(fit_bioma_nobare_sedge)
+# fit_bioma_nobare_legume <- aov(bioma_nobare$`legume(g)`~treatment*field.no)
+# summary(fit_bioma_nobare_legume)
+# fit_bioma_nobare_forb <- aov(bioma_nobare$`forb(g)`~treatment*field.no)
+# summary(fit_bioma_nobare_forb)
+# fit_bioma_nobare_pp <- aov(bioma_nobare$`poisonousplants(g)`~treatment*field.no)
+# summary(fit_bioma_nobare_pp)
+# fit_bioma_nobare_litter <- aov(bioma_nobare$`litter`~treatment*field.no)
+# summary(fit_bioma_nobare_litter)
+# fit_bioma_nobare_tb <- aov(bioma_nobare$`totalbiomass(g)`~treatment*field.no)
+# summary(fit_bioma_nobare_tb)
 
 
 #spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
