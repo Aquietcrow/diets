@@ -1,13 +1,18 @@
-install.packages("RODBC")
-install.packages("ade4")
-install.packages("vegan")
-install.packages("reshape2")
-install.packages("ggplot2")
-install.packages("lattice")
-install.packages("plotrix")
-install.packages("lubridate")
-install.packages("purrr")
-install.packages("sqldf")
+# install.packages("RODBC")
+# install.packages("ade4")
+# install.packages("vegan")
+# install.packages("reshape2")
+# install.packages("ggplot2")
+# install.packages("lattice")
+# install.packages("plotrix")
+# install.packages("lubridate")
+# install.packages("purrr")#for working with functions and vectors
+# install.packages("sqldf")
+# install.packages("car")#qqPlot
+# install.packages("tidyverse")#
+# install.packages("stringr")#for strings
+# install.packages("dplyr")#a grammar of data manipulation, providing a consistent set of verbs that solve the most common data manipulation challenges
+
 # [ctrl + shift + c] can make notes.
 # "RODBC" for Microsoft Access
 # "ade4" for Monte-Carlo Test
@@ -25,7 +30,13 @@ library("plotrix")
 library("lubridate")
 library("purrr")
 library("sqldf")
-# Input data
+library("car")
+library("tidyverse")
+library("vegan")
+library("MASS")
+library("readxl")
+
+# Input data from MS Access
 # ls()
 # rm()
 SummerHenan2021<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
@@ -63,6 +74,11 @@ View(SpeCov2021new_Ligularia)
 is.na(PatchCover2021[,7:56])<-"A"
 View(PatchCover2021)
 
+############################################################
+#Bare land analysis                                        #
+############################################################
+#TurnrNA in bare land data to A, because it is base land   #
+############################################################
 reNaTA <- function(x,n,m,na.omit=FALSE)
   {for( n in 1:nrow(x))
     {for( m in 7:ncol(x))
@@ -80,9 +96,9 @@ PatchCover2021new<-reNaTA(PatchCover2021,1,7)
 View(PatchCover2021new)
 PatchCo2021Reorder<-PatchCover2021new[order(PatchCover2021new[,1]),]
 
-######################################################
-#Ugly loop statement
-######################################################
+#####################################################################
+#Ugly loop statement, for count the different type in line transect
+#####################################################################
 CountPatch <- function(x,numA,numB,numC,na.omit=FALSE)
   {for(n in 1:nrow(x))
     {for(m in 7:56)
@@ -136,7 +152,8 @@ subplot_bioma1<-subplot_bioma[-number1]
 spe<-subset(spe_henan_notbare,select = spe_sub)
 bioma_nobare2021
 
-
+###################################################################
+# "30t-4q-3" is bare land, so has no data;"52-2c-1q-3","15-1c-2q-2" ,"15-1c-3q-1","15-1c-3q-3","15-1c-4q-3","15-1t-1q-3","15-1t-2q-1","15-1t-3q-1","15-1t-4q-2","15-2c-1q-2" are Oxytropis_sp,but this type is not investigated in every field,exclude this type of biomass data, in case these data will lead to bias in the biomass(2022-11-30).        
 Func_Oxytro_No<-grep("Oxytropis_sp",SpeCov2021new$functionalgroup,fixed = TRUE)
 a1<-SpeCov2021new[-Func_Oxytro_No,]
 # 228+103=331
@@ -144,18 +161,11 @@ subplot_comb<-c(subplot_base,subplot_Ligularia)
 View(subplot_comb)
 subplot_all<-a1[,1:4]
 
-# "30t-4q-3" is bare land, so has no data;"52-2c-1q-3","15-1c-2q-2" ,"15-1c-3q-1","15-1c-3q-3","15-1c-4q-3","15-1t-1q-3","15-1t-2q-1","15-1t-3q-1","15-1t-4q-2","15-2c-1q-2" are Oxytropis_sp,but this type is not investigated in every field,exclude this type of biomass data, in case these data will lead to bias in the biomass(2022-11-30).        
-
-FailedfieldNo1<-grep("42c",bioma_nobare$fieldcode,fixed = TRUE)
-FailedfieldNo2<-grep("42t",bioma_nobare$fieldcode,fixed = TRUE)
-FailedfieldNo3<-grep("43c",bioma_nobare$fieldcode,fixed = TRUE)
-FailedfieldNo4<-grep("43t",bioma_nobare$fieldcode,fixed = TRUE)
-FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
-bioma_nobare2021<-bioma_nobare[-FailedfieldNoall,]
-bioma_all2021<-merge(subplot_all,bioma_nobare2021,by="subplot")
-a<-c(1,2,3,4,8,11:19)
-bioma_all2021clean<-bioma_all2021[,a]
-
+######################################################
+#Cover analysis                                      #
+######################################################
+#Replace the NA in plant cover investigation to 0.   #
+######################################################
 reNaT0 <- function(x,na.omit=FALSE)
 {for( n in 1:nrow(x))
 {for( m in 7:ncol(x))
@@ -167,25 +177,144 @@ reNaT0 <- function(x,na.omit=FALSE)
   result<-x
   return(result)}
 
-SpeCov2021new_base_clean<-reNaT0(SpeCov2021new_base)
+SpeCov2021new_base_0<-reNaT0(SpeCov2021new_base)
+SpeCov2021new_Ligularia_0<-reNaT0(SpeCov2021new_Ligularia)
 
-SpeCov2021new_Ligularia_clean<-reNaT0(SpeCov2021new_Ligularia)
+#spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
+str(spe_henan_bare)#84*106
+str(spe_henan)#467*106, one row is NA.
+View(spe_henan_notbare)#382*106
+# Be cautious about the $ID column.
+
+#first rank the average value of coverage
+#then make a boxplot
+#I can use some common methods in microbiological analysis.
+# boxplot(spe_henan_Ligularia_sp[8:106])
+
+apply(spe_henan_notbare,2,range)# The range of data in each column.
+
+#[Ranked frequency of Occurrence of each species]
+#Target_ ?????the usage of table() function.
+#rank the frequency
+
+#NOTE
+#fractions() #ref. packages: MASS
+#sqrt()
+#^
+
+#转置t()
+#整合数据 aggregate()
+#subset()
+spe_sub<-colnames(spe_henan_notbare_NA)[c(2:4,8:106)]
+spe<-subset(spe_henan_notbare,select = spe_sub)
+str(spe)
+
+
+#traceback()
+#spe[row,col],spe[m=row,n=col]
+rm(spe_occur)
+#spe_new<-spe[,4:102]
+#spe_t<-t(spe_new)
+
 ###################################################################
+#create a new dataframe
+spe_col<-c(rep(x,99))
+spe_num<-c(rep(1,99))
+spe_occur<-data.frame(spe_col,spe_num)
+
+##############################################
+#Iteration 2022 12 04
+##############################################
+func_occur<-function(x,sum_occur=0){
+  for(n in 8:ncol(x)){
+    for(m in 1:nrow(x)){
+      if(is.na(x[m,n])==TRUE){
+        sum_occur<-sum_occur
+        m<-m+1}
+      else{
+        sum_occur<-sum_occur+1
+        m<-m+1}
+    }
+    spe_occur[n-7,1]<-colnames(SpeCov2021new_base)[n]
+    spe_occur[n-7,2]<-sum_occur/nrow(x)
+    sum_occur<-0
+    n=n+1
+  }
+  return(spe_occur)
+}
+#####################################################
+#2022 11 29
+#recalculate the frequency and average cover data
+spe_fre_21<-func_occur(SpeCov2021new_base)
+length(colnames(SpeCov2021new_base))
+colnames(SpeCov2021new_base)[103]
+spe_fre_21order<-spe_fre_21[order(spe_fre_21[,2],decreasing = T),]
+
+spe_freLig_21<-func_occur(SpeCov2021new_Ligularia)
+spe_freLig_21order<-spe_freLig_21[order(spe_freLig_21[,2],decreasing = T),]
+#barplot(spe_order)
+# trim=.2
+
+#####################################################
+#Average cover of base plot 2022 12 04
+#####################################################
+spe_cov_base_ave21<-apply(SpeCov2021new_base_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
+#Q: trim'必需是长度必需为一的数值
+# R in Action 3.4.6 数字标注 
+# Next goal: ggplot2
+spe_cov_base_se21<-apply(SpeCov2021new_base_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
+#ls()
+# head(spe_cov_base_ave21)
+# tail()
+spe_name<-colnames(SpeCov2021new_base_0)[8:103]
+#Succeed
+spe_covave<-data.frame(spe_name,spe_cov_base_ave21,spe_cov_base_se21)
+summary(spe_cov_base_ave21==spe_covave$spe_cov_base_ave21)#check if the vector is equal to the column.
+summary(rownames(spe_covave)==spe_covave$spe_name)
+#options(scipen = 200)
+#View(spe_covave)
+#warnings()
+spe_covave_21order<-spe_covave[order(spe_covave[,2],decreasing = T),]
+grep("Trigonotis_peduncularis",spe_covave_21order$spe_name,fixed = TRUE)#result before no.27 is bigger than 1%.
+#####################################################
+#Average cover of Ligularia_virgaurea plot 2022 12 04
+#####################################################
+spe_cov_Lig_ave21<-apply(SpeCov2021new_Ligularia_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
+spe_cov_Lig_se21<-apply(SpeCov2021new_Ligularia_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
+spe_cov_Lig_ave<-data.frame(spe_name,spe_cov_Lig_ave21,spe_cov_Lig_se21)
+spe_cov_Lig_ave_21order<-spe_cov_Lig_ave[order(spe_cov_Lig_ave[,2],decreasing = T),]
+grep("Kobresia_sp_unknown",spe_cov_Lig_ave_21order$spe_name,fixed = TRUE)
+#result before no.26 is bigger than 1%.
+
+#export the data set.
+write.csv(spe_covave_21order, file = "spe_covave_21order.csv",row.names = TRUE)
+write.csv(spe_fre_21order,file = "spe_fre_21order.csv",row.names = TRUE)
+write.csv(spe_freLig_21order,file = "spe_freLig_21order.csv",row.names = TRUE)
+write.csv(spe_cov_Lig_ave_21order,file = "spe_cov_Lig_ave_21order.csv",row.names = TRUE)
 ############################################################
-#Using data with Ligularia_sp from 2022 March
+#Using data with Ligularia_sp from 2022 December
 ############################################################
 
-# spe_covave_order<-read.csv("spe_covave_order.csv",header=TRUE)
-# spe_fre_order<-read.csv("spe_fre_order.csv",header=TRUE)
-# colnames(spe_fre_order)[2]<-"spe_name"
-# spe_CovFre <- merge(spe_covave_order,spe_fre_order,by="spe_name")
-# df_2yx<-spe_CovFre[,c("spe_name","spe_cov_ave","spe_cov_sd","spe_num")]
+spe_covave_21order<-read.csv("spe_covave_21order.csv",header=TRUE)
+spe_fre_21order<-read.csv("spe_fre_21order.csv",header=TRUE)
+head(spe_covave_21order)
+head(spe_fre_21order)
+head(spe_CovFre)
+colnames(spe_covave_21order)[2]<-"spe_name"
+colnames(spe_covave_21order)[3]<-"spe_cov_ave" 
+colnames(spe_covave_21order)[4]<-"spe_cov_sd"  
+colnames(spe_fre_21order)[2]<-"spe_name"
+colnames(spe_fre_21order)[3]<-"spe_num"
+spe_CovFre <- merge(spe_covave_21order[2:4],spe_fre_21order[2:3],by="spe_name")
+# df_2yx<- spe_CovFre[,c("spe_name","spe_cov_ave","spe_cov_sd","spe_num")]
 # df_yx1<- spe_CovFre[1:20,c("spe_name","spe_cov_ave")]
-# df_yx2<- spe_covave_order[1:20,c("spe_name","spe_cov_ave")]
-# df_yx3<- spe_fre_order[1:20,c("spe_name","spe_num")]
 
+df_yx2<- spe_covave_order[1:20,c("spe_name","spe_cov_ave")]
+df_yx3<- spe_fre_order[1:20,c("spe_name","spe_num")]
 
-# Draw the graph
+############################################################
+# Draw the bar plot using ggplot.
+###############################################################
 ggplot(df_yx2,aes(x=reorder(spe_name,-spe_cov_ave),y=spe_cov_ave))+
   geom_col()+
   theme(axis.text.x=element_text(angle = 45, vjust = 1, hjust = 1,size=12,face = "bold"))+
@@ -207,14 +336,26 @@ ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+
 # barplot(df_yx2$spe_cov_ave,main="Average coverage",xlab="Plant species", ylab = "Cover", horiz = TRUE,names.arg = df_yx2$spe_name)
 # barplot(df_yx3$spe_num, main="Occurrence frequency", xlab = "Plant species", ylab = "Frequency", horiz = FALSE)
 
-##############################################
-#%subset the poisonous plant plots% 2022 11 18
-##############################################
 
+######################################################################
+#Biomass analysis                                                    #
+######################################################################
+#Field 42 and Field 42 has failed the cooperation with herders.      #
+######################################################################
+
+FailedfieldNo1<-grep("42c",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNo2<-grep("42t",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNo3<-grep("43c",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNo4<-grep("43t",bioma_nobare$fieldcode,fixed = TRUE)
+FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
+bioma_nobare2021<-bioma_nobare[-FailedfieldNoall,]
+bioma_all2021<-merge(subplot_all,bioma_nobare2021,by="subplot")
+a<-c(1,2,3,4,8,11:19)
+bioma_all2021clean<-bioma_all2021[-193,a]
 
 ##################################################################
 # Goal_Subset_Omit every row that satisfy bioma$functionalgroup = "bare"
-#Biomass data analysis
+#Biomass data analysis 2022 03, biomass data has not update yet[2022 12 04]
 ##################################################################
 subset(bioma,bioma$functionalgroup != "bare")
 #Ligularia_sp
@@ -233,13 +374,10 @@ bioma_nobare$`poisonousplants(g)`[is.na(bioma_nobare$`poisonousplants(g)`)==TRUE
 bioma_nobare$`litter(g)`[is.na(bioma_nobare$`litter(g)`)==TRUE] <- 0
 
 ##############################################################
-# Goal_Add "t" to each row [I can do this before Goal No.2]
+# Goal_Add "t" to each row [2022 03]
 # if the string in bioma_nobare$fieldcode has "t"
 #   TRUE, add one paremeter "t" 
 #   FALSE, add one paremeter "c"
-##############################################################
- 
-##############################################################
 #grep() and grepl() are arguments can search certain string for target string.
 #str(), summary()
 #nchar(bioma_nobare$fieldcode[1])
@@ -274,37 +412,21 @@ bioma_nobare$treatment <- as.factor(bioma_nobare$treatment)
 #Goal_Graphs
 ##############################################################
 
-#Frequency distribution histogram of total biomass
-#Frequency distribution histogram of grass/sedges/legumes/forbs/poisonous plants/litter
-
-# colnames(bioma_nobare) [15]<-"totalbiomass(g)"
-
 ############################################################
-# To test the normality of data
+# No.1 To test the normality of data
+# No.2 If variances in different groups are different? we hope variances in different groups are not different[this test is sensitive to outliers]
 ############################################################
 
-# hist(bioma_nobare$`grass(g)`)
-# hist(bioma_nobare$`sedge(g)`)
-# hist(bioma_nobare$`legume(g)`)
-# hist(bioma_nobare$`forb(g)`)
-# hist(bioma_nobare$`poisonousplants(g)`)
-# hist(bioma_nobare$`litter(g)`)
-# hist(bioma_nobare$`totalbiomass(g)`)
 
 ##########################################################
 # Goal_Statistic analysis using Monte-Carlo randomization
 # if total biomass are different between control groups(c) and treatment groups(t){homogeneous}
-
-###########################################################
-#Q: For biomass data, if I turn NA to 0, the average will be lower. Is it right? 
-#A: Right, because 0 is also a data here.
 ###########################################################
  
 
-
 ##############################################################
 #p135 <R in Action 2nd> in Chinese
-#What?
+#analysis the biomass data.
 ##############################################################
 mystats <- function(x, na.omit=FALSE){
   if(na.omit)
@@ -325,175 +447,120 @@ by(bioma_nobare[mylist],bioma_nobare$fieldcode,dstats)
 #Q: how to set the decimal to 0.01g 0.01g.
 #To get the field number.
 #bioma_nobare$field.no <- substring(bioma_nobare$fieldcode,1,nchar(bioma_nobare$fieldcode)-1)
-
+##############################################################
 
 ##############################################################
-#two-way anova
+#two-way anova 2022 12 5
 # ok, now do a 2-way ANOVA, or GLM, with as factor field, treatment, and field*treatment, and as dependent total biomass, then thee same for grass, etc.
-# aggregate group function
+# aggregate function group 
 ##############################################################
 
 attach(bioma_all2021clean)
-# detach()
+detach(bioma_all2021clean)
 
-aggregate(bioma_all2021clean[mylist],by=list(field.no,treatment), FUN=mean)
+a<-aggregate(bioma_all2021clean[mylist],by=list(field.no,treatment,functionalgroup.x), FUN=mean)
+b<-aggregate(bioma_all2021clean[mylist],by=list(field.no,treatment,functionalgroup.x), FUN=sd)
 aggregate(bioma_all2021clean[mylist],by=list(field.no), FUN=mean)
-aggregate(bioma_all2021clean[mylist],by=list(treatment), FUN=mean)                     
-# aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=sd)
+aggregate(bioma_all2021clean[mylist],by=list(treatment), FUN=mean)  
+
+fit1<-qqPlot(lm(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$treatment,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+
+fit_totalbio_treatment<-aov(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$treatment)
+summary(fit_totalbio_treatment)
+#There is no difference between different treatment.
+fit_totalbio_site<-aov(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$`field.no`)
+summary(fit_totalbio_site)
+# Results
+# Df Sum Sq Mean Sq F value
+# bioma_all2021clean$field.no  16   3554  222.12   6.225
+# Residuals                   314  11205   35.68        
+# Pr(>F)    
+# bioma_all2021clean$field.no 4.97e-12 ***
+#   Residuals                               
+# ---
+#   Signif. codes:  
+#   0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# #There is significant difference in different sites.
+
+################################################
+#How to find outliers from the normality test
+################################################
+outlierTest(fit1)
+outlierTest(fit2)
+
+fit2<-bartlett.test(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$`treatment`,data = bioma_all2021clean)
+#Results
+# Bartlett test of homogeneity of variances
 # 
-# fit_bioma_nobare_grass <- aov(bioma_nobare$`grass(g)`~treatment*field.no)
-# summary(fit_bioma_nobare_grass)
-# fit_bioma_nobare_sedge <- aov(bioma_nobare$`sedge(g)`~treatment*field.no)
-# summary(fit_bioma_nobare_sedge)
-# fit_bioma_nobare_legume <- aov(bioma_nobare$`legume(g)`~treatment*field.no)
-# summary(fit_bioma_nobare_legume)
-# fit_bioma_nobare_forb <- aov(bioma_nobare$`forb(g)`~treatment*field.no)
-# summary(fit_bioma_nobare_forb)
-# fit_bioma_nobare_pp <- aov(bioma_nobare$`poisonousplants(g)`~treatment*field.no)
-# summary(fit_bioma_nobare_pp)
+# data:  bioma_all2021clean$`totalbiomass(g)` by bioma_all2021clean$treatment
+# Bartlett's K-squared = 18.955, df = 1, p-value =1.338e-05
+# print(1.338e-05,options())
+
+fit3<-qqPlot(lm(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+# aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=sd)
+
+####################################################################
+# Two-way anova 2022 12 05
+####################################################################
 # fit_bioma_nobare_litter <- aov(bioma_nobare$`litter`~treatment*field.no)
 # summary(fit_bioma_nobare_litter)
 # fit_bioma_nobare_tb <- aov(bioma_nobare$`totalbiomass(g)`~treatment*field.no)
 # summary(fit_bioma_nobare_tb)
 
+my_data <- bioma_all2021clean
+#facet_wrap
 
-#spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
-str(spe_henan_bare)#84*106
-str(spe_henan)#467*106, one row is NA.
-View(spe_henan_notbare)#382*106
-# Be cautious about the $ID column.
+######based on tidyverse package
+my_data %>% head()
+my_data %>%
+  ggplot(aes(x=`treatment`,y=`totalbiomass(g)`,fill=`treatment`))+
+  geom_boxplot(position = position_dodge())+
+  facet_wrap(vars(field.no))+
+  labs(title = "Effects of treatment and site on total biomass")
 
-#first rank the average value of coverage
-#then make a boxplot
-#I can use some common methods in microbiological analysis.
-#Turn all data NA to 0
-# boxplot(spe_henan_Ligularia_sp[8:106])
+result1<-aov(`totalbiomass(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "field.no") %>%
+  broom::tidy()
+# result is significantly different among different sites
+result2<-aov(`totalbiomass(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "treatment") %>%
+  broom::tidy()
+# result is not significantly different between different treatments
+result3<-aov(`totalbiomass(g)`~treatment*field.no,data = my_data) %>%
+  broom::tidy()
+#no interaction between the treatment and field.no, the result is caused by field.no difference.
 
+resultx4<-my_data%>%
+  group_by(field.no)%>%
+  summarise(
+    broom::tidy(aov(`totalbiomass(g)`~treatment,data = cur_data())),
+    .groups = "keep"
+  )%>%
+  select(term,statistic,p.value)%>%
+  filter(term != "Residuals")%>%
+  arrange(p.value)
+#all fields have no difference in their control and treatment.
 
-#spe_henan_notbare_NA has NA in data set.
-#spe_henan_notbare is without NA in data set.
-#spe_henan_notbare_data is pure data without other field information.
-spe_henan_notbare_NA <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)#cbind, combine according to columns
-
-spe_henan_notbare_data <- spe_henan_notbare_NA[8:106]
-spe_henan_notbare_data [is.na(spe_henan_notbare_data[1:99])==TRUE] <- 0
-
-spe_henan_notbare[8:106] <-spe_henan_notbare_data[1:99]
-apply(spe_henan_notbare,2,range)# The range of data in each column.
-
-#[Ranked frequency of Occurrence of each species]
-#Target_ the usage of table() function.
-#how many NA data, how many not NA data.
-#rank the frequency
-#make a barplot
-
-#calculate occurrence frequency of each species
-#NA to 0, occur to 1
-
-
-#[Ranked coverage of each species]
-#[Two way anova of biomass with statistic information]
-
-#fractions() #ref. packages: MASS
-#sqrt()
-#^
-
-#转置t()
-#整合数据 aggregate()
-spe_sub<-colnames(spe_henan_notbare_NA)[c(2:4,8:106)]
-spe<-subset(spe_henan_notbare,select = spe_sub)
-str(spe)
-#aggregate()
-
-#traceback()
-#spe[row,col],spe[m=row,n=col]
-rm(spe_occur)
-#spe_new<-spe[,4:102]
-#spe_t<-t(spe_new)
-spe_col<-c(rep(x,99))
-spe_num<-c(rep(1,99))
-spe_occur<-data.frame(spe_col,spe_num)
-
-##############################################
-#iteration
-##############################################
-func_occur<-function(x,m,n,sum_occur=0){
-  for(n in 4:ncol(x)){
-    for(m in 1:nrow(x)){
-      if(x[m,n]!=0){
-        sum_occur<-sum_occur+1
-        m<-m+1}
-      else{
-        sum_occur<-sum_occur
-        m<-m+1}
-  }
-    spe_occur[n-3,2]<-sum_occur/382*100
-    spe_occur[n-3,1]<-colnames(spe)[n]
-    sum_occur<-0
-    n=n+1
-  }
-  return(spe_occur)
-}
-#####################################################
-func_occur_NA<-function(x,m,n,sum_occur=0){
-  for(n in 8:ncol(x)){
-    for(m in 1:nrow(x)){
-      if(is.na(x[m,n]) ==TRUE){
-        sum_occur<-sum_occur
-        m<-m+1}
-      else{
-        sum_occur<-sum_occur+1
-        m<-m+1}
-    }
-    spe_occur[n-7,2]<-sum_occur/382*100
-    spe_occur[n-7,1]<-colnames(spe)[n-4]
-    sum_occur<-0
-    n=n+1
-  }
-  return(spe_occur)
-}
-
-#rm(spe_col)
-#rm(spe_num)
-
-#2022 11 29 it should only contain "base" category 
-#recalculate the frequency and average cover data
+##################################################################################
+# An example from above contents_repeated contents
+##################################################################################
+# ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+
+#   geom_col()+
+#   theme(axis.text.x=element_text(angle = 45, vjust = 1, hjust = 1,size=12,face = "bold"))+
+#   theme(axis.text.y = element_text(size=12, face="bold"))+
+#   xlab("Plant species")+
+#   ylab("Occurrence frequency")+
+#   theme(axis.title.x = element_text(vjust = 2,size=14,face="bold"))+
+#   theme(axis.title.y = element_text(vjust = 2,size=14,face= "bold"))
 
 
 
 
 
-spe_fre<-func_occur(spe,1,4)
-spe_fre_haveNA<-func_occur_NA(spe_henan_notbare_NA,1,8)
-# 100-sum(spe$Oxytropis_ochrocephala==0)/382*100
-spe_fre_order<-spe_fre[order(spe_fre[,2],decreasing = T),]
-spe_fre_haveNA_order<-spe_fre_haveNA[order(spe_fre_haveNA[,2],decreasing = T),]
-
-#barplot(spe_order)
-
-#trim=.2
-
-spe_cov_ave<-apply(spe[4:102],2,mean)#print format
-# R in Action 3.4.6 数字标注 
-# Next goal: ggplot2
-spe_cov_se<-apply(spe[4:102],2,std.error)
-#ls()
-head(spe_cov_ave)
-
-spe_name<-colnames(spe)[4:102]
-#Succeed
-spe_covave<-data.frame(spe_cov_ave,spe_name,spe_cov_se)
-summary(spe_cov_ave==spe_covave$spe_cov_ave)#check if the vector is equal to the column.
-summary(names(spe_cov_ave)==spe_covave$spe_name)
-#options(scipen = 200)
-#View(spe_covave)
-#warnings()
-spe_covave_order<-spe_covave[order(spe_covave[,1],decreasing = T),]
 
 
-#export the data set.
-write.csv(spe_covave_order, file = "spe_covave_order.csv",row.names = TRUE)
-write.csv(spe_fre_order,file = "spe_fre_order.csv",row.names = TRUE)
+
+
 
 
 
