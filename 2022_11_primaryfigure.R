@@ -1,23 +1,20 @@
-# install.packages("RODBC")
-# install.packages("ade4")
-# install.packages("vegan")
-# install.packages("reshape2")
+# install.packages("RODBC")# Use MS access
+# install.packages("ade4") #Exploratory and Euclidean Methods in Environmental Sciences. Tools for multivariate data analysis.Monte-Carlo Test
+# install.packages("vegan") #Community Ecology Package. Ordination methods, diversity analysis and other functions for community and vegetation ecologists.
+# install.packages("reshape2") #Flexibly restructure and aggregate data using just two functions: melt and 'dcast' (or 'acast').
 # install.packages("ggplot2")
-# install.packages("lattice")
-# install.packages("plotrix")
-# install.packages("lubridate")
+# install.packages("lattice") #The lattice add-on package is an implementation of Trellis graphics for R
+# install.packages("plotrix") #Various Plotting Functions ... Lots of plots, various labeling, axis and color scaling functions.
+# install.packages("lubridate")#time or date related,"Ops.POSIXt", "Ops.Date"
 # install.packages("purrr")#for working with functions and vectors
-# install.packages("sqldf")
-# install.packages("car")#qqPlot
-# install.packages("tidyverse")#
+# install.packages("sqldf")# running SQL statements on R data frames, optimized for convenience. sqldf works with the SQLite, H2, PostgreSQL
+# install.packages("car")#qqPlot; an acronym for Companion to Applied Regression
+# install.packages("tidyverse")#The 'tidyverse' is a set of packages that work in harmony because they share common data representations and 'API' design.
 # install.packages("stringr")#for strings
 # install.packages("dplyr")#a grammar of data manipulation, providing a consistent set of verbs that solve the most common data manipulation challenges
 
 # [ctrl + shift + c] can make notes.
-# "RODBC" for Microsoft Access
-# "ade4" for Monte-Carlo Test
 # .libPaths()
-# "sqldf" for using SQLite language
 # "C:/Users/oh_my/AppData/Local/R/win-library/4.2"
 # "C:/Program Files/R/R-4.2.2/library" 
 library("RODBC")
@@ -35,7 +32,7 @@ library("tidyverse")
 library("vegan")
 library("MASS")
 library("readxl")
-
+library("tidyr")
 # Input data from MS Access
 # ls()
 # rm()
@@ -44,13 +41,12 @@ PatchCover2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
 SpeCov2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
 Biomas2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_biomass")
 spe_plantnames <- sqlFetch(SummerHenan2021,"2021_summer_henan_speciesname")
+background_zokorLivestock<-sqlFetch(SummerHenan2021,"2021_summer_henan_sitesinformation")
+write.csv(background_zokorLivestock, file = "background_zokorLivestock.csv",row.names = TRUE)
 spe_plantnames_rightorder<-spe_plantnames[order(spe_plantnames[,1]),]
-# View(SpeCov2021)
-# View(bioma)
-# View(bioma_subset1)
 # spe_plantnames_rightorder$Chinesename==colnames(SpeCov2021)[8:114]
 colnames(SpeCov2021_22)[8:114]<-spe_plantnames_rightorder$Latinname
-# str(spe_plant)
+
 View(SpeCov2021_22)
 date1<-as.Date('2022-01-01')
 #"Ops.POSIXt", "Ops.Date"
@@ -62,23 +58,22 @@ SpeCov2021<-subset(SpeCov2021_22,SpeCov2021_22$time < date1)
 # FailedfieldNo4<-grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
 # FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
 SpeCov2021new<-SpeCov2021[-FailedfieldNoall,]
-# View(SpeCov2021new_base)
 SpeCov2021new_base<-subset(SpeCov2021new,SpeCov2021new$functionalgroup == "base")
 SpeCov2021new_Ligularia <- subset(SpeCov2021new,SpeCov2021new$functionalgroup == "Ligularia_sp")
 
 View(SpeCov2021new_Ligularia)
-#A:base land
-#B:bare land
-#C:Ligularia_sp land
-#dim() for check data structure
-is.na(PatchCover2021[,7:56])<-"A"
 View(PatchCover2021)
+#dim() for check data structure
 
 ############################################################
 #Bare land analysis                                        #
 ############################################################
 #TurnrNA in bare land data to A, because it is base land   #
+#is.na(PatchCover2021[,7:56])<-"A"                         #
 ############################################################
+#A:base land
+#B:bare land
+#C:Ligularia_sp land
 reNaTA <- function(x,n,m,na.omit=FALSE)
   {for( n in 1:nrow(x))
     {for( m in 7:ncol(x))
@@ -89,8 +84,6 @@ reNaTA <- function(x,n,m,na.omit=FALSE)
     n<-n+1} 
   result<- as.data.frame(x)
   return(result)}
-
-#how to get the new data.frame?
 
 PatchCover2021new<-reNaTA(PatchCover2021,1,7)
 View(PatchCover2021new)
@@ -144,12 +137,10 @@ PatchCo2021Per<-x2
 
 subplot_Ligularia<-SpeCov2021new_Ligularia$subplot  
 subplot_base<-SpeCov2021new_base$subplot
-# subplot_bioma<-bioma_nobare2021$subplot
 subplot_bioma1<-subplot_bioma[-number1]
-
 # result1<-(subplot_bioma1 %in% subplot_comb)
 # number1<-grep(FALSE,result1,fixed = TRUE)
-spe<-subset(spe_henan_notbare,select = spe_sub)
+# spe<-subset(spe_henan_notbare,select = spe_sub)
 bioma_nobare2021
 
 ###################################################################
@@ -160,6 +151,8 @@ a1<-SpeCov2021new[-Func_Oxytro_No,]
 subplot_comb<-c(subplot_base,subplot_Ligularia)
 View(subplot_comb)
 subplot_all<-a1[,1:4]
+# spe_sub<-colnames(spe_henan_notbare_NA)[c(2:4,8:106)]
+# spe<-subset(spe_henan_notbare,select = spe_sub)
 
 ######################################################
 #Cover analysis                                      #
@@ -179,40 +172,14 @@ reNaT0 <- function(x,na.omit=FALSE)
 
 SpeCov2021new_base_0<-reNaT0(SpeCov2021new_base)
 SpeCov2021new_Ligularia_0<-reNaT0(SpeCov2021new_Ligularia)
-
 #spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
-str(spe_henan_bare)#84*106
-str(spe_henan)#467*106, one row is NA.
-View(spe_henan_notbare)#382*106
-# Be cautious about the $ID column.
-
-#first rank the average value of coverage
-#then make a boxplot
-#I can use some common methods in microbiological analysis.
-# boxplot(spe_henan_Ligularia_sp[8:106])
-
 apply(spe_henan_notbare,2,range)# The range of data in each column.
-
-#[Ranked frequency of Occurrence of each species]
-#Target_ ?????the usage of table() function.
-#rank the frequency
-
-#NOTE
+#table() function is to test the occurrence of different variable.
 #fractions() #ref. packages: MASS
-#sqrt()
-#^
-
-#转置t()
-#整合数据 aggregate()
-#subset()
-spe_sub<-colnames(spe_henan_notbare_NA)[c(2:4,8:106)]
-spe<-subset(spe_henan_notbare,select = spe_sub)
-str(spe)
-
-
+#sqrt() #^
+#t()
 #traceback()
 #spe[row,col],spe[m=row,n=col]
-rm(spe_occur)
 #spe_new<-spe[,4:102]
 #spe_t<-t(spe_new)
 
@@ -221,7 +188,6 @@ rm(spe_occur)
 spe_col<-c(rep(x,99))
 spe_num<-c(rep(1,99))
 spe_occur<-data.frame(spe_col,spe_num)
-
 ##############################################
 #Iteration 2022 12 04
 ##############################################
@@ -254,28 +220,22 @@ spe_freLig_21<-func_occur(SpeCov2021new_Ligularia)
 spe_freLig_21order<-spe_freLig_21[order(spe_freLig_21[,2],decreasing = T),]
 #barplot(spe_order)
 # trim=.2
-
+# warnings()
 #####################################################
 #Average cover of base plot 2022 12 04
 #####################################################
 spe_cov_base_ave21<-apply(SpeCov2021new_base_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
-#Q: trim'必需是长度必需为一的数值
-# R in Action 3.4.6 数字标注 
-# Next goal: ggplot2
+#Q: trim'必需是长度必需为一的数值 A:trim=0
 spe_cov_base_se21<-apply(SpeCov2021new_base_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
-#ls()
 # head(spe_cov_base_ave21)
 # tail()
 spe_name<-colnames(SpeCov2021new_base_0)[8:103]
-#Succeed
 spe_covave<-data.frame(spe_name,spe_cov_base_ave21,spe_cov_base_se21)
 summary(spe_cov_base_ave21==spe_covave$spe_cov_base_ave21)#check if the vector is equal to the column.
 summary(rownames(spe_covave)==spe_covave$spe_name)
-#options(scipen = 200)
-#View(spe_covave)
-#warnings()
 spe_covave_21order<-spe_covave[order(spe_covave[,2],decreasing = T),]
 grep("Trigonotis_peduncularis",spe_covave_21order$spe_name,fixed = TRUE)#result before no.27 is bigger than 1%.
+
 #####################################################
 #Average cover of Ligularia_virgaurea plot 2022 12 04
 #####################################################
@@ -284,7 +244,7 @@ spe_cov_Lig_se21<-apply(SpeCov2021new_Ligularia_0[8:103],2,std.error,options("sc
 spe_cov_Lig_ave<-data.frame(spe_name,spe_cov_Lig_ave21,spe_cov_Lig_se21)
 spe_cov_Lig_ave_21order<-spe_cov_Lig_ave[order(spe_cov_Lig_ave[,2],decreasing = T),]
 grep("Kobresia_sp_unknown",spe_cov_Lig_ave_21order$spe_name,fixed = TRUE)
-#result before no.26 is bigger than 1%.
+#result before no.26 is bigger than 1%
 
 #export the data set.
 write.csv(spe_covave_21order, file = "spe_covave_21order.csv",row.names = TRUE)
@@ -292,25 +252,27 @@ write.csv(spe_fre_21order,file = "spe_fre_21order.csv",row.names = TRUE)
 write.csv(spe_freLig_21order,file = "spe_freLig_21order.csv",row.names = TRUE)
 write.csv(spe_cov_Lig_ave_21order,file = "spe_cov_Lig_ave_21order.csv",row.names = TRUE)
 ############################################################
-#Using data with Ligularia_sp from 2022 December
+#Using base data from 2022 December
 ############################################################
 
 spe_covave_21order<-read.csv("spe_covave_21order.csv",header=TRUE)
+
 spe_fre_21order<-read.csv("spe_fre_21order.csv",header=TRUE)
-head(spe_covave_21order)
-head(spe_fre_21order)
-head(spe_CovFre)
+# head(spe_covave_21order)
+# head(spe_fre_21order)
+# head(spe_CovFre)
 colnames(spe_covave_21order)[2]<-"spe_name"
 colnames(spe_covave_21order)[3]<-"spe_cov_ave" 
 colnames(spe_covave_21order)[4]<-"spe_cov_sd"  
+
 colnames(spe_fre_21order)[2]<-"spe_name"
 colnames(spe_fre_21order)[3]<-"spe_num"
 spe_CovFre <- merge(spe_covave_21order[2:4],spe_fre_21order[2:3],by="spe_name")
 # df_2yx<- spe_CovFre[,c("spe_name","spe_cov_ave","spe_cov_sd","spe_num")]
 # df_yx1<- spe_CovFre[1:20,c("spe_name","spe_cov_ave")]
+df_yx2<- spe_covave_21order[1:20,c("spe_name","spe_cov_ave")]
 
-df_yx2<- spe_covave_order[1:20,c("spe_name","spe_cov_ave")]
-df_yx3<- spe_fre_order[1:20,c("spe_name","spe_num")]
+df_yx3<- spe_fre_21order[1:20,c("spe_name","spe_num")]
 
 ############################################################
 # Draw the bar plot using ggplot.
@@ -335,14 +297,31 @@ ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+
 
 # barplot(df_yx2$spe_cov_ave,main="Average coverage",xlab="Plant species", ylab = "Cover", horiz = TRUE,names.arg = df_yx2$spe_name)
 # barplot(df_yx3$spe_num, main="Occurrence frequency", xlab = "Plant species", ylab = "Frequency", horiz = FALSE)
+############################################################
+#Using Lig data from 2022 December
+############################################################
+
+
+
+
+
+
+
+
+#####################################################################################
+#using MCMC or resampling method, not average the cover data of subplot in each block
+#plant species composition comparison 2022 12 05
+#####################################################################################
+
+
+
 
 
 ######################################################################
 #Biomass analysis                                                    #
 ######################################################################
-#Field 42 and Field 42 has failed the cooperation with herders.      #
+#I has failed the cooperation with herders in Field 42 and Field 42. #     
 ######################################################################
-
 FailedfieldNo1<-grep("42c",bioma_nobare$fieldcode,fixed = TRUE)
 FailedfieldNo2<-grep("42t",bioma_nobare$fieldcode,fixed = TRUE)
 FailedfieldNo3<-grep("43c",bioma_nobare$fieldcode,fixed = TRUE)
@@ -365,7 +344,6 @@ bioma_nobare <- rbind(bioma_subset1,bioma_subset2)
 summary(bioma_nobare)
 #moldy samples were labeled as integer "1".
 bioma_nobare$if_moldy
-
 bioma_nobare$`grass(g)`[is.na(bioma_nobare$`grass(g)`)==TRUE] <- 0
 bioma_nobare$`sedge(g)`[is.na(bioma_nobare$`sedge(g)`)==TRUE] <- 0
 bioma_nobare$`legume(g)`[is.na(bioma_nobare$`legume(g)`)==TRUE] <- 0
@@ -388,7 +366,6 @@ bioma_nobare$treatment <- grepl("c",bioma_nobare$fieldcode)
 bioma_nobare$treatment[bioma_nobare$treatment == TRUE] <-"c"
 bioma_nobare$treatment[bioma_nobare$treatment == FALSE] <-"t"
 bioma_nobare$treatment
-
 bioma_nobare$totalbiomass(g) <- bioma_nobare$`grass(g)` + bioma_nobare$`sedge(g)`+ bioma_nobare$`legume(g)`+bioma_nobare$`forb(g)` + bioma_nobare$`poisonousplants(g)`
 
 ###########################################################
@@ -399,29 +376,24 @@ bioma_nobare$field.no <- as.factor(bioma_nobare$field.no)
 bioma_nobare$treatment <- as.factor(bioma_nobare$treatment)
 #NOTE: Some sites do have NA. I should check before I compare these sites with the other sites.
 
+####To be continue.2022 12 05
+a<-melt(bioma_all2021clean,id=c("functionalgroup.x","treatment"))
+
 ##############################################################
 #delete environmental variables 
 ##############################################################
 #a<-ls()
 #rm(list=a[which(a!='bioma_nobare')])
-#ls()
-#bioma_nobare <- subset(bioma_nobare, select = -mid)
-
 
 ##############################################################
 #Goal_Graphs
 ##############################################################
 
 ############################################################
+# 2022 12 05 
 # No.1 To test the normality of data
 # No.2 If variances in different groups are different? we hope variances in different groups are not different[this test is sensitive to outliers]
 ############################################################
-
-
-##########################################################
-# Goal_Statistic analysis using Monte-Carlo randomization
-# if total biomass are different between control groups(c) and treatment groups(t){homogeneous}
-###########################################################
  
 
 ##############################################################
@@ -452,7 +424,6 @@ by(bioma_nobare[mylist],bioma_nobare$fieldcode,dstats)
 ##############################################################
 #two-way anova 2022 12 5
 # ok, now do a 2-way ANOVA, or GLM, with as factor field, treatment, and field*treatment, and as dependent total biomass, then thee same for grass, etc.
-# aggregate function group 
 ##############################################################
 
 attach(bioma_all2021clean)
@@ -497,6 +468,18 @@ fit2<-bartlett.test(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$`tre
 # print(1.338e-05,options())
 
 fit3<-qqPlot(lm(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+
+qqPlot(lm(bioma_all2021clean$`grass(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+
+qqPlot(lm(bioma_all2021clean$`sedge(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+
+qqPlot(lm(bioma_all2021clean$`legume(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+
+qqPlot(lm(bioma_all2021clean$`forb(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+
+qqPlot(lm(bioma_all2021clean$`poisonousplants(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
+
+qqPlot(lm(bioma_all2021clean$`litter(g)`~bioma_all2021clean$`field.no`,data = bioma_all2021clean),simulate=TRUE,main="Q-Q Plot",labels=TRUE)
 # aggregate(bioma_nobare[mylist],by=list(field.no,treatment), FUN=sd)
 
 ####################################################################
@@ -506,11 +489,206 @@ fit3<-qqPlot(lm(bioma_all2021clean$`totalbiomass(g)`~bioma_all2021clean$`field.n
 # summary(fit_bioma_nobare_litter)
 # fit_bioma_nobare_tb <- aov(bioma_nobare$`totalbiomass(g)`~treatment*field.no)
 # summary(fit_bioma_nobare_tb)
-
 my_data <- bioma_all2021clean
-#facet_wrap
 
-######based on tidyverse package
+##########################################
+#based on tidyverse package///facet_wrap
+#grass biomass
+##########################################
+my_data %>% head()
+my_data %>%
+  ggplot(aes(x=`treatment`,y=`grass(g)`,fill=`treatment`))+
+  geom_boxplot(position = position_dodge())+
+  facet_wrap(vars(field.no))+
+  labs(title = "Effects of treatment and site on grass biomass")
+
+result1<-aov(`grass(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "field.no") %>%
+  broom::tidy()
+# result is significantly different among different sites
+result2<-aov(`grass(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "treatment") %>%
+  broom::tidy()
+# result is not significantly different between different treatments
+result3<-aov(`grass(g)`~treatment*field.no,data = my_data) %>%
+  broom::tidy()
+#no interaction between the treatment and field.no, the result is caused by field.no difference.
+resultx4<-my_data%>%
+  group_by(field.no)%>%
+  summarise(
+    broom::tidy(aov(`grass(g)`~treatment,data = cur_data())),
+    .groups = "keep"
+  )%>%
+  select(term,statistic,p.value)%>%
+  filter(term != "Residuals")%>%
+  arrange(p.value)
+#all fields have no difference in their control and treatment.
+bioma_all2021clean$`sedge(g)`
+
+#########################################################################
+#sedge biomass
+#########################################################################
+my_data %>% head()
+my_data %>%
+  ggplot(aes(x=`treatment`,y=`sedge(g)`,fill=`treatment`))+
+  geom_boxplot(position = position_dodge())+
+  facet_wrap(vars(field.no))+
+  labs(title = "Effects of treatment and site on sedge biomass")
+
+result1<-aov(`sedge(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "field.no") %>%
+  broom::tidy()
+# result is significantly different among different sites
+result2<-aov(`sedge(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "treatment") %>%
+  broom::tidy()
+# result is not significantly different between different treatments
+result3<-aov(`sedge(g)`~treatment*field.no,data = my_data) %>%
+  broom::tidy()
+#no interaction between the treatment and field.no, the result is caused by field.no difference.
+resultx4<-my_data%>%
+  group_by(field.no)%>%
+  summarise(
+    broom::tidy(aov(`sedge(g)`~treatment,data = cur_data())),
+    .groups = "keep"
+  )%>%
+  select(term,statistic,p.value)%>%
+  filter(term != "Residuals")%>%
+  arrange(p.value)
+#all fields have no difference in their control and treatment.
+#########################################################################
+#forb biomass
+#########################################################################
+my_data %>% head()
+my_data %>%
+  ggplot(aes(x=`treatment`,y=`forb(g)`,fill=`treatment`))+
+  geom_boxplot(position = position_dodge())+
+  facet_wrap(vars(field.no))+
+  labs(title = "Effects of treatment and site on forb biomass")
+
+result1<-aov(`forb(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "field.no") %>%
+  broom::tidy()
+# result is significantly different among different sites
+result2<-aov(`forb(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "treatment") %>%
+  broom::tidy()
+# result is not significantly different between different treatments
+result3<-aov(`forb(g)`~treatment*field.no,data = my_data) %>%
+  broom::tidy()
+#no interaction between the treatment and field.no, the result is caused by field.no difference.
+resultx4<-my_data%>%
+  group_by(field.no)%>%
+  summarise(
+    broom::tidy(aov(`forb(g)`~treatment,data = cur_data())),
+    .groups = "keep"
+  )%>%
+  select(term,statistic,p.value)%>%
+  filter(term != "Residuals")%>%
+  arrange(p.value)
+#all fields have no difference in their control and treatment.
+
+
+#########################################################################
+#poisonousplants biomass
+#########################################################################
+my_data %>% head()
+my_data %>%
+  ggplot(aes(x=`treatment`,y=`litter(g)`,fill=`treatment`))+
+  geom_boxplot(position = position_dodge())+
+  facet_wrap(vars(field.no))+
+  labs(title = "Effects of treatment and site on litters")
+
+result1<-aov(`litter(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "field.no") %>%
+  broom::tidy()
+# result is significantly different among different sites
+result2<-aov(`litter(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "treatment") %>%
+  broom::tidy()
+# result is not significantly different between different treatments
+result3<-aov(`litter(g)`~treatment*field.no,data = my_data) %>%
+  broom::tidy()
+#no interaction between the treatment and field.no, the result is caused by field.no difference.
+resultx4<-my_data%>%
+  group_by(field.no)%>%
+  summarise(
+    broom::tidy(aov(`litter(g)`~treatment,data = cur_data())),
+    .groups = "keep"
+  )%>%
+  select(term,statistic,p.value)%>%
+  filter(term != "Residuals")%>%
+  arrange(p.value)
+#all fields have no difference in their control and treatment.
+
+#########################################################################
+#poisonousplants biomass
+#########################################################################
+my_data %>% head()
+my_data %>%
+  ggplot(aes(x=`treatment`,y=`poisonousplants(g)`,fill=`treatment`))+
+  geom_boxplot(position = position_dodge())+
+  facet_wrap(vars(field.no))+
+  labs(title = "Effects of treatment and site on poisonous plants biomass")
+
+result1<-aov(`poisonousplants(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "field.no") %>%
+  broom::tidy()
+# result is significantly different among different sites
+result2<-aov(`poisonousplants(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "treatment") %>%
+  broom::tidy()
+# result is not significantly different between different treatments
+result3<-aov(`poisonousplants(g)`~treatment*field.no,data = my_data) %>%
+  broom::tidy()
+#no interaction between the treatment and field.no, the result is caused by field.no difference.
+resultx4<-my_data%>%
+  group_by(field.no)%>%
+  summarise(
+    broom::tidy(aov(`poisonousplants(g)`~treatment,data = cur_data())),
+    .groups = "keep"
+  )%>%
+  select(term,statistic,p.value)%>%
+  filter(term != "Residuals")%>%
+  arrange(p.value)
+#all fields have no difference in their control and treatment.
+
+#########################################################################
+# legume biomass
+# bioma_all2021clean
+#########################################################################
+my_data %>% head()
+my_data %>%
+  ggplot(aes(x=`treatment`,y=`legume(g)`,fill=`treatment`))+
+  geom_boxplot(position = position_dodge())+
+  facet_wrap(vars(field.no))+
+  labs(title = "Effects of treatment and site on legume biomass")
+
+result1<-aov(`legume(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "field.no") %>%
+  broom::tidy()
+# result is significantly different among different sites
+result2<-aov(`legume(g)`~treatment+field.no,data = my_data) %>%
+  TukeyHSD(which = "treatment") %>%
+  broom::tidy()
+# result is not significantly different between different treatments
+result3<-aov(`legume(g)`~treatment*field.no,data = my_data) %>%
+  broom::tidy()
+#no interaction between the treatment and field.no, the result is caused by field.no difference.
+resultx4<-my_data%>%
+  group_by(field.no)%>%
+  summarise(
+    broom::tidy(aov(`legume(g)`~treatment,data = cur_data())),
+    .groups = "keep"
+  )%>%
+  select(term,statistic,p.value)%>%
+  filter(term != "Residuals")%>%
+  arrange(p.value)
+#all fields have no difference in their control and treatment.
+
+#########################################################################
+#total biomass
+#########################################################################
 my_data %>% head()
 my_data %>%
   ggplot(aes(x=`treatment`,y=`totalbiomass(g)`,fill=`treatment`))+
@@ -529,7 +707,6 @@ result2<-aov(`totalbiomass(g)`~treatment+field.no,data = my_data) %>%
 result3<-aov(`totalbiomass(g)`~treatment*field.no,data = my_data) %>%
   broom::tidy()
 #no interaction between the treatment and field.no, the result is caused by field.no difference.
-
 resultx4<-my_data%>%
   group_by(field.no)%>%
   summarise(
@@ -539,26 +716,39 @@ resultx4<-my_data%>%
   select(term,statistic,p.value)%>%
   filter(term != "Residuals")%>%
   arrange(p.value)
-#all fields have no difference in their control and treatment.
+###########################################################################facet_wrap
+#stack bar plot
+#############################################################################
+View(bioma_all2021clean)
+a<-c(6:10,12,14)
+bioma_all2021_forstack<-bioma_all2021clean[,a]
+# colnames(bioma_all2021clean)[6:14]
+View(bioma_all2021_forstack)
 
-##################################################################################
-# An example from above contents_repeated contents
-##################################################################################
-# ggplot(df_yx3,aes(x=reorder(spe_name,-spe_num),y=spe_num))+
-#   geom_col()+
-#   theme(axis.text.x=element_text(angle = 45, vjust = 1, hjust = 1,size=12,face = "bold"))+
-#   theme(axis.text.y = element_text(size=12, face="bold"))+
-#   xlab("Plant species")+
-#   ylab("Occurrence frequency")+
-#   theme(axis.title.x = element_text(vjust = 2,size=14,face="bold"))+
-#   theme(axis.title.y = element_text(vjust = 2,size=14,face= "bold"))
+mylist2<-c("grass(g)","sedge(g)","legume(g)","forb(g)","poisonousplants(g)")
+bioma_all2021_stack_2<-aggregate(bioma_all2021_forstack[mylist2],by=list(bioma_all2021_forstack$field.no,bioma_all2021_forstack$treatment), FUN=mean)
+View(bioma_all2021_stack_2)
+colnames(bioma_all2021_stack_2)[1]<-"field.no" 
+colnames(bioma_all2021_stack_2)[2]<-"treatment"
 
+bioma_all2021_stack<-melt(bioma_all2021_stack_2,id=c("treatment","field.no"))
+View(bioma_all2021_stack)
+colnames(bioma_all2021_stack) [3]<-"functional_group"
+colnames(bioma_all2021_stack) [4]<-"biomass"
+# [1] "treatment"        "field.no"         "functional_group"
+# [4] "biomass(g)"
+#gather() has reshape data function, similar to melt(). 
+#df2 <-bioma_all2021_forstack%>%gather(treatment,field.no,ends_with("(g)"))
 
-
-
-
-
-
+#facet_wrap stacked bar plot r ggplot2
+ggplot(bioma_all2021_stack,aes(x=treatment,y=biomass,fill=functional_group))+
+  geom_col()+
+  labs(y="biomass(g)")+
+  scale_fill_brewer(palette="Set1")+
+  theme(axis.text.x=element_text( vjust = 1, hjust = 1,size=12,face = "bold"))+
+  theme(axis.title.x = element_text(vjust = 2,size=14,face="bold"))+
+  theme(axis.title.y = element_text(vjust=2,size=14,face = "bold"))+
+  facet_grid(.~field.no)
 
 
 
