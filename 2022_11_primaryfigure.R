@@ -12,6 +12,7 @@
 # install.packages("tidyverse")#The 'tidyverse' is a set of packages that work in harmony because they share common data representations and 'API' design.
 # install.packages("stringr")#for strings
 # install.packages("dplyr")#a grammar of data manipulation, providing a consistent set of verbs that solve the most common data manipulation challenges
+# install.packages("dendextend") #extending 'dendrogram' objects in R, letting you visualize and compare trees of 'hierarchical clusterings'. Heatmaps.
 
 # [ctrl + shift + c] can make notes.
 # .libPaths()
@@ -33,16 +34,45 @@ library("vegan")
 library("MASS")
 library("readxl")
 library("tidyr")
+# library("dendextend")
+
+
+#Divide the 2022 data to base group and Ligularia_sp group
+#Divide the species name list to different functional groups
+#Bryce, R., van der Wal, R., Mitchell, R. et al. Metapopulation Dynamics of a Burrowing Herbivore Drive Spatio-temporal Dynamics of Riparian Plant Communities. Ecosystems 16, 1165–1177 (2013). https://doi.org/10.1007/s10021-013-9677-9
+
+#20221216 This paper is closely related to my analysing method
+#Find more good papers in this field, then do the basic analysis.
+# View(spe_plantnames)
+# unpalatable_species
+# grass
+# sedge
+# legume
+# forb  
+
+#2022 12 29
+#1#USING PUBLISHED DATA
+#The min-middle-max density of plateau zokors.
+#The min-middle-max density of plateau zokor mounds.
+#The spatial pattern of plateau zokor and plateau zokor mounds.
+#2#USING NETLOGO TO MAKE A MODEL OF PLATEAU ZOKORS DISTURBANCE MODEL.
+#3#DO A PCA OF PLANT COMMUNITY DATA OF 2021.
+#THEN PLANT COMMUNITY DATA OF 2022.
+#THEN COMPARE BETWEEN 2021 AND 2022.
+
+#2022 12 30
+#test independence of errors of each sampling site 
 # Input data from MS Access
 # ls()
 # rm()
-SummerHenan2021<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
-PatchCover2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_patchescover")
-SpeCov2021_22<-sqlFetch(SummerHenan2021,"2021_summer_henan_plotcover")
-Biomas2021<-sqlFetch(SummerHenan2021,"2021_summer_henan_biomass")
-spe_plantnames <- sqlFetch(SummerHenan2021,"2021_summer_henan_speciesname")
-background_zokorLivestock<-sqlFetch(SummerHenan2021,"2021_summer_henan_sitesinformation")
-write.csv(background_zokorLivestock, file = "background_zokorLivestock.csv",row.names = TRUE)
+
+SummerHenan2021_22<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
+PatchCover2021<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_patchescover")
+SpeCov2021_22<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_plotcover")
+Biomas2021_22<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_biomass")
+spe_plantnames <- sqlFetch(SummerHenan2021_22,"2021_summer_henan_speciesname")
+background_zokorLivestock<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_sitesinformation")
+# write.csv(background_zokorLivestock, file = "background_zokorLivestock.csv",row.names = TRUE)
 spe_plantnames_rightorder<-spe_plantnames[order(spe_plantnames[,1]),]
 # spe_plantnames_rightorder$Chinesename==colnames(SpeCov2021)[8:114]
 colnames(SpeCov2021_22)[8:114]<-spe_plantnames_rightorder$Latinname
@@ -52,18 +82,32 @@ date1<-as.Date('2022-01-01')
 #"Ops.POSIXt", "Ops.Date"
 #Failedfield<-c("42c","42t","43c","43t")
 SpeCov2021<-subset(SpeCov2021_22,SpeCov2021_22$time < date1)
-# FailedfieldNo1<-grep("42c",SpeCov2021$fieldcode,fixed = TRUE)
-# FailedfieldNo2<-grep("42t",SpeCov2021$fieldcode,fixed = TRUE)
-# FailedfieldNo3<-grep("43c",SpeCov2021$fieldcode,fixed = TRUE)
-# FailedfieldNo4<-grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
-# FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
-SpeCov2021new<-SpeCov2021[-FailedfieldNoall,]
-SpeCov2021new_base<-subset(SpeCov2021new,SpeCov2021new$functionalgroup == "base")
-SpeCov2021new_Ligularia <- subset(SpeCov2021new,SpeCov2021new$functionalgroup == "Ligularia_sp")
 
-View(SpeCov2021new_Ligularia)
-View(PatchCover2021)
-#dim() for check data structure
+SpeCov2022<-subset(SpeCov2021_22,SpeCov2021_22$time > date1)
+
+########################################################################Compare the average cover between each species in each field and #treatment in 2021 and 2022.
+#######################################################################
+FailedfieldNo1<-grep("42c",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNo2<-grep("42t",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNo3<-grep("43c",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNo4<-grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
+SpeCov2021_dele_failedfields<-SpeCov2021[-FailedfieldNoall,]
+SpeCov2021_Base<-subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "base")
+SpeCov2021_Ligularia <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "Ligularia_sp")
+SpeCov2021_Bare <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "bare")
+View(SpeCov2021_Base)
+View(SpeCov2021_Ligularia)
+View(SpeCov2021_Bare)
+subplot_inform <- SpeCov2021_dele_failedfields[2:4]
+x1<-merge(SpeCov2022,subplot_inform,by="subplot") 
+#dim() #to check data structure
+#length() #to for check data length
+
+
+############################################
+
+# rm(list = ls(all=TRUE))
 
 ############################################################
 #Bare land analysis                                        #
@@ -136,7 +180,7 @@ apply(x2[,5:7],2,mean)
 PatchCo2021Per<-x2  
 
 subplot_Ligularia<-SpeCov2021new_Ligularia$subplot  
-subplot_base<-SpeCov2021new_base$subplot
+subplot_base<-SpeCov2021_Base$subplot
 subplot_bioma1<-subplot_bioma[-number1]
 # result1<-(subplot_bioma1 %in% subplot_comb)
 # number1<-grep(FALSE,result1,fixed = TRUE)
@@ -170,7 +214,7 @@ reNaT0 <- function(x,na.omit=FALSE)
   result<-x
   return(result)}
 
-SpeCov2021new_base_0<-reNaT0(SpeCov2021new_base)
+SpeCov2021_Base_0<-reNaT0(SpeCov2021_Base)
 SpeCov2021new_Ligularia_0<-reNaT0(SpeCov2021new_Ligularia)
 #spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
 apply(spe_henan_notbare,2,range)# The range of data in each column.
@@ -201,7 +245,7 @@ func_occur<-function(x,sum_occur=0){
         sum_occur<-sum_occur+1
         m<-m+1}
     }
-    spe_occur[n-7,1]<-colnames(SpeCov2021new_base)[n]
+    spe_occur[n-7,1]<-colnames(SpeCov2021_Base)[n]
     spe_occur[n-7,2]<-sum_occur/nrow(x)
     sum_occur<-0
     n=n+1
@@ -211,9 +255,9 @@ func_occur<-function(x,sum_occur=0){
 #####################################################
 #2022 11 29
 #recalculate the frequency and average cover data
-spe_fre_21<-func_occur(SpeCov2021new_base)
-length(colnames(SpeCov2021new_base))
-colnames(SpeCov2021new_base)[103]
+spe_fre_21<-func_occur(SpeCov2021_Base)
+length(colnames(SpeCov2021_Base))
+colnames(SpeCov2021_Base)[103]
 spe_fre_21order<-spe_fre_21[order(spe_fre_21[,2],decreasing = T),]
 
 spe_freLig_21<-func_occur(SpeCov2021new_Ligularia)
@@ -224,12 +268,12 @@ spe_freLig_21order<-spe_freLig_21[order(spe_freLig_21[,2],decreasing = T),]
 #####################################################
 #Average cover of base plot 2022 12 04
 #####################################################
-spe_cov_base_ave21<-apply(SpeCov2021new_base_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
+spe_cov_base_ave21<-apply(SpeCov2021_Base_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
 #Q: trim'必需是长度必需为一的数值 A:trim=0
-spe_cov_base_se21<-apply(SpeCov2021new_base_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
+spe_cov_base_se21<-apply(SpeCov2021_Base_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
 # head(spe_cov_base_ave21)
 # tail()
-spe_name<-colnames(SpeCov2021new_base_0)[8:103]
+spe_name<-colnames(SpeCov2021_Base_0)[8:103]
 spe_covave<-data.frame(spe_name,spe_cov_base_ave21,spe_cov_base_se21)
 summary(spe_cov_base_ave21==spe_covave$spe_cov_base_ave21)#check if the vector is equal to the column.
 summary(rownames(spe_covave)==spe_covave$spe_name)
