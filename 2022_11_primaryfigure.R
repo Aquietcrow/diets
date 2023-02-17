@@ -51,26 +51,12 @@ library("tidyr")
 #THEN PLANT COMMUNITY DATA OF 2022.
 #THEN COMPARE BETWEEN 2021 AND 2022.
 
-#2022 12 16 
-#This paper is closely related to my analysing method
-#Find more good papers in this field, then do the basic analysis.
-# View(spe_plantnames)
-# unpalatable_species
-# grass
-# sedge
-# legume
-# forb  
 
-
-#2022 12 29
 #test independence of errors of each sampling site 
 # Input data from MS Access
 # ls()
 # rm()
 
-################################################################
-#Import data from MS Access
-###############################################################
 SummerHenan2021_22<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
 PatchCover2021<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_patchescover")
 SpeCov2021_22<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_plotcover")
@@ -87,6 +73,7 @@ date1<-as.Date('2022-01-01')
 #"Ops.POSIXt", "Ops.Date"
 #Failedfield<-c("42c","42t","43c","43t")
 SpeCov2021<-subset(SpeCov2021_22,SpeCov2021_22$time < date1)
+
 SpeCov2022<-subset(SpeCov2021_22,SpeCov2021_22$time > date1)
 
 ########################################################################Compare the average cover between each species in each field and #treatment in 2021 and 2022.
@@ -97,13 +84,7 @@ FailedfieldNo3<-grep("43c",SpeCov2021$fieldcode,fixed = TRUE)
 FailedfieldNo4<-grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
 FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
 
-SpeCov2021_dele_failedfields <- SpeCov2021[-FailedfieldNoall,]
-SpeCov2021_Base <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "base")
-SpeCov2021_Ligularia <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "Ligularia_sp")
-SpeCov2021_Bare <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "bare")
-# View(SpeCov2021_Base)
-# View(SpeCov2021_Ligularia)
-# View(SpeCov2021_Bare)
+
 subplot_inform <- SpeCov2021_dele_failedfields[2:4]
 x1<-merge(SpeCov2022,subplot_inform,by="subplot") 
 #dim() #to check data structure
@@ -180,7 +161,7 @@ x2$NumCPer<-x2$NumC/2500
 apply(x2[,5:7],2,range)  
 apply(x2[,5:7],2,mean)  
 
-PatchCo2021Per<-x2  
+
 
 ######################################################
 #Cover analysis                                      #
@@ -199,7 +180,7 @@ reNaT0 <- function(x,na.omit=FALSE)
   return(result)}
 
 SpeCov2021_Base_0<-reNaT0(SpeCov2021_Base)
-SpeCov2021_Ligularia_0<-reNaT0(SpeCov2021_Ligularia)
+
 #spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
 apply(spe_henan_notbare,2,range)# The range of data in each column.
 #table() function is to test the occurrence of different variable.
