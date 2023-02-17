@@ -1,6 +1,6 @@
 #install.packages("RODBC")
 #install.packages("doBy")
-install.packages("plotrix")
+#install.packages("plotrix")
 #[ctrl + shift + c] can make notes.
 #"RODBC" for Microsoft Access
 #"ade4" for Monte-Carlo Test
