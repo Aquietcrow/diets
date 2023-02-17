@@ -41,15 +41,6 @@ library("tidyr")
 #Divide the species name list to different functional groups
 #Bryce, R., van der Wal, R., Mitchell, R. et al. Metapopulation Dynamics of a Burrowing Herbivore Drive Spatio-temporal Dynamics of Riparian Plant Communities. Ecosystems 16, 1165–1177 (2013). https://doi.org/10.1007/s10021-013-9677-9
 
-#20221216 This paper is closely related to my analysing method
-#Find more good papers in this field, then do the basic analysis.
-# View(spe_plantnames)
-# unpalatable_species
-# grass
-# sedge
-# legume
-# forb  
-
 #2022 12 29
 #1#USING PUBLISHED DATA
 #The min-middle-max density of plateau zokors.
@@ -60,7 +51,7 @@ library("tidyr")
 #THEN PLANT COMMUNITY DATA OF 2022.
 #THEN COMPARE BETWEEN 2021 AND 2022.
 
-#2022 12 30
+
 #test independence of errors of each sampling site 
 # Input data from MS Access
 # ls()
@@ -92,13 +83,8 @@ FailedfieldNo2<-grep("42t",SpeCov2021$fieldcode,fixed = TRUE)
 FailedfieldNo3<-grep("43c",SpeCov2021$fieldcode,fixed = TRUE)
 FailedfieldNo4<-grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
 FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
-SpeCov2021_dele_failedfields<-SpeCov2021[-FailedfieldNoall,]
-SpeCov2021_Base<-subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "base")
-SpeCov2021_Ligularia <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "Ligularia_sp")
-SpeCov2021_Bare <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "bare")
-View(SpeCov2021_Base)
-View(SpeCov2021_Ligularia)
-View(SpeCov2021_Bare)
+
+
 subplot_inform <- SpeCov2021_dele_failedfields[2:4]
 x1<-merge(SpeCov2022,subplot_inform,by="subplot") 
 #dim() #to check data structure
@@ -110,10 +96,10 @@ x1<-merge(SpeCov2022,subplot_inform,by="subplot")
 # rm(list = ls(all=TRUE))
 
 ############################################################
-#Bare land analysis                                        #
+#Prepare Bare land patch data                                        
 ############################################################
-#TurnrNA in bare land data to A, because it is base land   #
-#is.na(PatchCover2021[,7:56])<-"A"                         #
+#TurnrNA in bare land data to A, because it is base land   
+#is.na(PatchCover2021[,7:56])<-"A"                         
 ############################################################
 #A:base land
 #B:bare land
@@ -132,9 +118,6 @@ reNaTA <- function(x,n,m,na.omit=FALSE)
 PatchCover2021new<-reNaTA(PatchCover2021,1,7)
 View(PatchCover2021new)
 PatchCo2021Reorder<-PatchCover2021new[order(PatchCover2021new[,1]),]
-
-#####################################################################
-#Ugly loop statement, for count the different type in line transect
 #####################################################################
 CountPatch <- function(x,numA,numB,numC,na.omit=FALSE)
   {for(n in 1:nrow(x))
@@ -162,8 +145,8 @@ CountPatch <- function(x,numA,numB,numC,na.omit=FALSE)
 
 PatchCo2021Counted<-CountPatch(x=PatchCo2021Reorder,numA = 0,numB = 0,numC = 0) 
 
-attach(PatchCo2021Counted)
-detach(PatchCo2021Counted)
+# attach(PatchCo2021Counted)
+# detach(PatchCo2021Counted)
 NumASum <-aggregate(PatchCo2021Counted$NumA~fieldcode,data = PatchCo2021Counted,sum)
 NumBSum <-aggregate(PatchCo2021Counted$NumB~fieldcode,data = PatchCo2021Counted,sum) 
 NumCSum <-aggregate(PatchCo2021Counted$NumC~fieldcode,data = PatchCo2021Counted,sum) 
@@ -177,26 +160,8 @@ x2$NumBPer<-x2$NumB/2500
 x2$NumCPer<-x2$NumC/2500
 apply(x2[,5:7],2,range)  
 apply(x2[,5:7],2,mean)  
-PatchCo2021Per<-x2  
 
-subplot_Ligularia<-SpeCov2021new_Ligularia$subplot  
-subplot_base<-SpeCov2021_Base$subplot
-subplot_bioma1<-subplot_bioma[-number1]
-# result1<-(subplot_bioma1 %in% subplot_comb)
-# number1<-grep(FALSE,result1,fixed = TRUE)
-# spe<-subset(spe_henan_notbare,select = spe_sub)
-bioma_nobare2021
 
-###################################################################
-# "30t-4q-3" is bare land, so has no data;"52-2c-1q-3","15-1c-2q-2" ,"15-1c-3q-1","15-1c-3q-3","15-1c-4q-3","15-1t-1q-3","15-1t-2q-1","15-1t-3q-1","15-1t-4q-2","15-2c-1q-2" are Oxytropis_sp,but this type is not investigated in every field,exclude this type of biomass data, in case these data will lead to bias in the biomass(2022-11-30).        
-Func_Oxytro_No<-grep("Oxytropis_sp",SpeCov2021new$functionalgroup,fixed = TRUE)
-a1<-SpeCov2021new[-Func_Oxytro_No,]
-# 228+103=331
-subplot_comb<-c(subplot_base,subplot_Ligularia)
-View(subplot_comb)
-subplot_all<-a1[,1:4]
-# spe_sub<-colnames(spe_henan_notbare_NA)[c(2:4,8:106)]
-# spe<-subset(spe_henan_notbare,select = spe_sub)
 
 ######################################################
 #Cover analysis                                      #
@@ -215,7 +180,7 @@ reNaT0 <- function(x,na.omit=FALSE)
   return(result)}
 
 SpeCov2021_Base_0<-reNaT0(SpeCov2021_Base)
-SpeCov2021new_Ligularia_0<-reNaT0(SpeCov2021new_Ligularia)
+
 #spe_henan_notbare <- rbind(spe_henan_base,spe_henan_Ligularia_sp,spe_henan_Oxytropis_sp)
 apply(spe_henan_notbare,2,range)# The range of data in each column.
 #table() function is to test the occurrence of different variable.
@@ -260,7 +225,7 @@ length(colnames(SpeCov2021_Base))
 colnames(SpeCov2021_Base)[103]
 spe_fre_21order<-spe_fre_21[order(spe_fre_21[,2],decreasing = T),]
 
-spe_freLig_21<-func_occur(SpeCov2021new_Ligularia)
+spe_freLig_21<-func_occur(SpeCov2021_Ligularia)
 spe_freLig_21order<-spe_freLig_21[order(spe_freLig_21[,2],decreasing = T),]
 #barplot(spe_order)
 # trim=.2
@@ -283,8 +248,8 @@ grep("Trigonotis_peduncularis",spe_covave_21order$spe_name,fixed = TRUE)#result 
 #####################################################
 #Average cover of Ligularia_virgaurea plot 2022 12 04
 #####################################################
-spe_cov_Lig_ave21<-apply(SpeCov2021new_Ligularia_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
-spe_cov_Lig_se21<-apply(SpeCov2021new_Ligularia_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
+spe_cov_Lig_ave21<-apply(SpeCov2021_Ligularia_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
+spe_cov_Lig_se21<-apply(SpeCov2021_Ligularia_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
 spe_cov_Lig_ave<-data.frame(spe_name,spe_cov_Lig_ave21,spe_cov_Lig_se21)
 spe_cov_Lig_ave_21order<-spe_cov_Lig_ave[order(spe_cov_Lig_ave[,2],decreasing = T),]
 grep("Kobresia_sp_unknown",spe_cov_Lig_ave_21order$spe_name,fixed = TRUE)
