@@ -308,5 +308,5 @@ a1 <- c(2,3,4,7)
 c1 <- cbind(SpeCov_2021[a1],div_2021)
 a2 <- c(1,3,4,7,115,116)
 c2 <- cbind(SpeCov_2022[a2],div_2022)
-
+Diversity_
 write.csv(c1,file = "Diversity indices in 2021.csv",row.names = TRUE)
