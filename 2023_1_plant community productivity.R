@@ -41,10 +41,10 @@ library("vioplot")
 library("psych")#corr.test
 library("ggpubr")#for making plots
 library("Rmisc")
-SummerHenan2021_22<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
-PatchCover2021<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_patchescover")
-Zokor_2021<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_sitesinformation")
-
+SummerHenan2021_22 <- odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
+PatchCover2021 <- sqlFetch(SummerHenan2021_22,"2021_summer_henan_patchescover")
+Zokor_2021 <- sqlFetch(SummerHenan2021_22,"2021_summer_henan_sitesinformation")
+PatchCover2022 <- sqlFetch(SummerHenan2021_22,"2022_summer_henan_patchescover")
 
 ############################################################
 #Prepare Bare land patch data                                        
@@ -69,6 +69,8 @@ reNaTA <- function(x,n,m,na.omit=FALSE)
 PatchCover2021new<-reNaTA(PatchCover2021,1,7)
 View(PatchCover2021new)
 PatchCo2021Reorder<-PatchCover2021new[order(PatchCover2021new[,1]),]
+
+PatchCover2022new <- reNaTA(PatchCover2022[101:400,],1,7) 
 #####################################################################
 CountPatch <- function(x,numA,numB,numC,na.omit=FALSE)
 {for(n in 1:nrow(x))
@@ -92,18 +94,23 @@ m<-m+1}
   numC<-0;
   n<n+1}
   return(x)}
+# 2022 bare land patch: "7c","7t","10-2c","10-2t","11-3c","11-3t"
 
 
 PatchCo2021Counted<-CountPatch(x=PatchCo2021Reorder,numA = 0,numB = 0,numC = 0) 
-
+PatchCo2022Counted <- CountPatch(x = PatchCover2022new, numA = 0, numB = 0, numC = 0)
 # attach(PatchCo2021Counted)
 # detach(PatchCo2021Counted)
-NumASum <-aggregate(PatchCo2021Counted$NumA~fieldcode,data = PatchCo2021Counted,sum)
-NumBSum <-aggregate(PatchCo2021Counted$NumB~fieldcode,data = PatchCo2021Counted,sum) 
-NumCSum <-aggregate(PatchCo2021Counted$NumC~fieldcode,data = PatchCo2021Counted,sum) 
+NumASum <- aggregate(PatchCo2021Counted$NumA~fieldcode,data = PatchCo2021Counted,sum)
+NumBSum <- aggregate(PatchCo2021Counted$NumB~fieldcode,data = PatchCo2021Counted,sum) 
+NumCSum <- aggregate(PatchCo2021Counted$NumC~fieldcode,data = PatchCo2021Counted,sum) 
 
-x1<-merge(NumASum,NumBSum,by="fieldcode")
-x2<-merge(x1,NumCSum,by="fieldcode")
+NumASum <- aggregate(PatchCo2022Counted$NumA~fieldcode, data = PatchCo2022Counted,sum)
+NumBSum <- aggregate(PatchCo2022Counted$NumB~fieldcode, data = PatchCo2022Counted,sum)
+NumCSum <- aggregate(PatchCo2022Counted$NumC~fieldcode, data = PatchCo2022Counted,sum)
+
+x1 <- merge(NumASum,NumBSum,by="fieldcode")
+x2 <- merge(x1,NumCSum,by="fieldcode")
 colnames(x2)[2]<-"NumA"
 colnames(x2)[3]<-"NumB"
 colnames(x2)[4]<-"NumC"
@@ -113,8 +120,9 @@ x2$NumCPer<-x2$NumC/2500*100
 apply(x2[,5:7],2,range)  
 apply(x2[,5:7],2,mean)  
 
-PatchCo2021Per<-x2  
-
+PatchCo2021Per <- x2  
+PatchCo2022Per <- x2
+write.csv(PatchCo2022Per, file = "PatchCo2022Per_20230224.csv",row.names = TRUE)
 ####################################
 # The outline of my data analysis ##
 ####################################
@@ -211,7 +219,7 @@ write.csv(x7,file = "Zokor number and bare land in 2021_20230213.csv",row.names 
 
 
 zokorNumber_PatchCover_reg$Vegetated_Per <- zokorNumber_PatchCover_reg$NumCPer + zokorNumber_PatchCover_reg$NumAPer
-
+PatchCover2021
 
 x8 <- c("Number_of_zokor_in_2021","Number_of_killed_zokor_in_2021","Remaining_number_of_zokor_2021","~","NumAPer","NumBPer","NumCPer","Vegetated_Per")
 

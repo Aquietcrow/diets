@@ -26,6 +26,6 @@ plot(ls_7c_noalpha_refl)
 
 bandnames_3 <- list.files("D:/multispectral/7c_transparent_reflectance", pattern="\\.tif$", full.names = T)
 bandnames_3
-ls_transparent_refl <-stack(bandnames_3)
+ls_transparent_refl <- stack(bandnames_3)
 ls_transparent_refl
 plot(ls_transparent_refl)
