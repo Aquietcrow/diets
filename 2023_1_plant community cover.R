@@ -18,7 +18,8 @@
 # .libPaths()
 # "C:/Users/oh_my/AppData/Local/R/win-library/4.2"
 # "C:/Program Files/R/R-4.2.2/library" 
-
+getwd()
+setwd("E:/r_data_dit")
 library("RODBC")
 library("ade4")
 library("vegan")
@@ -35,15 +36,14 @@ library("vegan")
 library("MASS")
 library("readxl")
 library("tidyr")
-# library("dendextend")
+library("dendextend")
 
 #2023 1 14
-# 2022 dataset has not been prepared
-# using MCMC or resampling method, not average the cover data of subplot in each block
-#plant species composition comparison 2022 12 05
+# using MCMC or resampling method, not averaging the cover data of subplot in each block
+# plant species composition comparison 2022 12 05
 
 #2022 12 29
-#1#USING PUBLISHED DATA
+#1# USING PUBLISHED DATA
 #The min-middle-max density of plateau zokors.
 #The min-middle-max density of plateau zokor mounds.
 #The spatial pattern of plateau zokor and plateau zokor mounds.
@@ -53,7 +53,6 @@ library("tidyr")
 #THEN COMPARE BETWEEN 2021 AND 2022.
 
 #2022 12 16 
-#This paper is closely related to my analysing method
 #Find more good papers in this field, then do the basic analysis.
 # View(spe_plantnames)
 # unpalatable_species
@@ -72,42 +71,58 @@ library("tidyr")
 # ls()
 # rm()
 
-################################################################
+###############################################################
 #Import data from MS Access
 ###############################################################
-SummerHenan2021_22<-odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
-SpeCov2021_22<-sqlFetch(SummerHenan2021_22,"2021_summer_henan_plotcover")
+SummerHenan2021_22 <- odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
+SpeCov2021_22 <- sqlFetch(SummerHenan2021_22,"2021_summer_henan_plotcover")
 spe_plantnames <- sqlFetch(SummerHenan2021_22,"2021_summer_henan_speciesname")
-spe_plantnames_rightorder<-spe_plantnames[order(spe_plantnames[,1]),]
+spe_plantnames_rightorder <- spe_plantnames[order(spe_plantnames[,1]),]
 # spe_plantnames_rightorder$Chinesename==colnames(SpeCov2021)[8:114]
-colnames(SpeCov2021_22)[8:114]<-spe_plantnames_rightorder$Latinname
+colnames(SpeCov2021_22)[8:114] <- spe_plantnames_rightorder$Latinname
 
 View(SpeCov2021_22)
-date1<-as.Date('2022-01-01')
+date1 <- as.Date('2022-01-01')
 #"Ops.POSIXt", "Ops.Date"
 #Failedfield<-c("42c","42t","43c","43t")
-SpeCov2021<-subset(SpeCov2021_22,SpeCov2021_22$time < date1)
-SpeCov2022<-subset(SpeCov2021_22,SpeCov2021_22$time > date1)
+SpeCov2021 <- subset(SpeCov2021_22,SpeCov2021_22$time < date1)
+SpeCov2022 <- subset(SpeCov2021_22,SpeCov2021_22$time > date1)
 
 ########################################################################
 #Compare the average cover between each species in each field and #treatment in 2021 and 2022.
 #######################################################################
-FailedfieldNo1<-grep("42c",SpeCov2021$fieldcode,fixed = TRUE)
-FailedfieldNo2<-grep("42t",SpeCov2021$fieldcode,fixed = TRUE)
-FailedfieldNo3<-grep("43c",SpeCov2021$fieldcode,fixed = TRUE)
-FailedfieldNo4<-grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
-FailedfieldNoall<-c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
+FailedfieldNo1 <- grep("42c",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNo2 <- grep("42t",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNo3 <- grep("43c",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNo4 <- grep("43t",SpeCov2021$fieldcode,fixed = TRUE)
+FailedfieldNoall <- c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo4)
 
 SpeCov2021_dele_failedfields <- SpeCov2021[-FailedfieldNoall,]
 SpeCov2021_Base <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "base")
 SpeCov2021_Ligularia <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "Ligularia_sp")
 SpeCov2021_Bare <- subset(SpeCov2021_dele_failedfields,SpeCov2021_dele_failedfields$functionalgroup == "bare")
+
+
+
+# get 2 groups include palatable and unpalatable species in plant community coverage dataframe 
+spe_plantnames_palatable <- subset(spe_plantnames, spe_plantnames$functional_group != "Unpalatable_forb")
+spe_plantnames_unpalatable <- subset(spe_plantnames, spe_plantnames$functional_group == "Unpalatable_forb")
+spe_plantnames_palatable_c <- spe_plantnames_palatable$Latinname
+spe_plantnames_unpalatable_c <- spe_plantnames_unpalatable$Latinname
+
+
+
+#Error: object 'SpeCov_2022' not found 202309021048
+#
 # View(SpeCov2021_Base)
 # View(SpeCov2021_Ligularia)
 # View(SpeCov2021_Bare)
 subplot_inform <- SpeCov2021_dele_failedfields[2:4]#Extract the subplot functional group information from 2021's data.
-SpeCov2022_mergedsubplot<-merge(SpeCov2022,subplot_inform,by="subplot") 
+SpeCov2022_mergedsubplot <- merge(SpeCov2022,subplot_inform,by = "subplot") 
 write.csv(SpeCov2022_mergedsubplot,file = "SpeCov2022_mergedsubplot.csv",row.names = TRUE)
+
+SpeCov_2022_Base <- subset(SpeCov2022_mergedsubplot ,SpeCov2022_mergedsubplot $functionalgroup.y == "base" )
+
 #dim() #to check data structure
 #length() #to for check data length
 # rm(list = ls(all=TRUE))
@@ -117,54 +132,125 @@ write.csv(SpeCov2022_mergedsubplot,file = "SpeCov2022_mergedsubplot.csv",row.nam
 ######################################################
 #Function -- Replace the NA in plant cover investigation to 0.   
 ######################################################
-reNaT0 <- function(x,na.omit=FALSE)
-{for( n in 1:nrow(x))
-{for( m in 7:ncol(x))
-{if (is.na(x[n,m])==TRUE)
-{x[n,m]<- 0}
+reNaT0 <- function(x,a,na.omit=FALSE)
+{for(n in 1:nrow(x))
+{for(m in a:ncol(x))
+{if (is.na(x[n,m]) == TRUE)
+{x[n,m] <- 0}
   else
-  {m<-m+1}}
-  n<-n+1} 
-  result<-x
+  {m <- m + 1}}
+  n <- n + 1} 
+  result <- x
   return(result)}
 
-SpeCov2021_Base_0<-reNaT0(SpeCov2021_Base)
-SpeCov2021_Ligularia_0<-reNaT0(SpeCov2021_Ligularia)
+SpeCov2021_Base <- reNaT0(x = SpeCov2021_Base,a = 7)
+SpeCov2021_Ligularia <- reNaT0(x = SpeCov2021_Ligularia, a = 7)
+write.csv(SpeCov2021_Base, file = "SpeCov2021_Base_20230903.csv", row.names = TRUE)
+write.csv(SpeCov_2022_Base, file = "SpeCov_2022_Base_20230709.csv",row.names = TRUE)
+
+SpeCov2022_Base <- reNaT0(x = SpeCov2022_Base, a = 7)
 
 
-###################################################################
-#create a new dataframe based on the number of plant species
-x<-"a"
-spe_col<-c(rep(x,99))
-spe_num<-c(rep(1,99))
-spe_occur<-data.frame(spe_col,spe_num)
+# The sum of each species in all rows
+# colSums(df[c("X1961", "X1962", "X1999")], na.rm = TRUE)
+colSums(SpeCov2021_Base[spe_plantnames_palatable_c],na.rm = TRUE)
+
+Unpalatable_forb_index <- grep("Unpalatable_forb",spe_plantnames_rightorder$functional_group) + 7
+
+index_all <- c(8:114)
+palatable_forb_index <- index_all[!(index_all %in% Unpalatable_forb_index)]
+# the palatable species index include the "bareland" category. I need to exclude "bareland" when I sum up the palatable species coverage.
+# to exclude the "bareland" category from indices.
+palatable_forb_index <- palatable_forb_index[-68]
+
+SpeCov2021_Base$unpalatable_forb <- rowSums(SpeCov2021_Base[,Unpalatable_forb_index])
+
+SpeCov2021_Base$palatable_forb <- rowSums(SpeCov2021_Base[,palatable_forb_index])
+
+SpeCov2021_Base$total_cover <- rowSums(SpeCov2021_Base[,c(palatable_forb_index,Unpalatable_forb_index)])
+SpeCov2021_Base$palatable_forb_percentage <- (SpeCov2021_Base$palatable_forb/SpeCov2021_Base$total_cover)
+SpeCov2021_Base$unpalatable_forb_percentage <- (SpeCov2021_Base$unpalatable_forb/SpeCov2021_Base$total_cover)
+
+#calculate 2022 palatable and unpalatable species
+
+SpeCov2022_Base$unpalatable_forb <- rowSums(SpeCov2022_Base[,Unpalatable_forb_index])
+SpeCov2022_Base$palatable_forb <- rowSums(SpeCov2022_Base[,palatable_forb_index])
+
+SpeCov2022_Base$total_cover <- rowSums(SpeCov2022_Base[,c(palatable_forb_index,Unpalatable_forb_index)])
+SpeCov2022_Base$palatable_forb_percentage <- (SpeCov2022_Base$palatable_forb/SpeCov2022_Base$total_cover)
+SpeCov2022_Base$unpalatable_forb_percentage <- (SpeCov2022_Base$unpalatable_forb/SpeCov2022_Base$total_cover)
+ 
+write.csv(SpeCov2021_Base,file = "SpeCov2021_Base_sum_20230903.csv",row.names = TRUE)
+write.csv(SpeCov2022_Base,file = "SpeCov2022_Base_sum_20230903.csv",row.names = TRUE)
+
+SpeCov2021_Base <- read.csv("SpeCov2021_Base_sum_20230903.csv",header = TRUE)
+SpeCov2022_Base <- read.csv("SpeCov2022_Base_sum_20230903.csv",header = TRUE)
+subplot_inform <- read.csv("subplot_inform_20230215.csv",header = TRUE)
+x1 <- SpeCov2021_Base[,c(3,5,8,116:120)]
+x2 <- SpeCov2022_Base[,c(4,2,8,118:122)]
+# 2way anova of palatable and unpalatable biomass
+x1_2021 <- merge(x1,subplot_inform,by = "subplot")
+x2_2022 <- merge(x2,subplot_inform,by = "subplot")
+x1_2021$time <- rep(2021,228)
+x2_2022$time <- rep(2022,247)
+colnames(x1_2021)[2] <- "fieldcode"
+write.csv(x1_2021, file = "SpeCov2021_Base_20230904.csv", row.names = TRUE)
+write.csv(x2_2022, file = "SpeCov2022_Base_20230904.csv", row.names = TRUE)
+
+x1_2021 <- read.csv("SpeCov2021_Base_20230904.csv", header = TRUE)
+x2_2022 <- read.csv("SpeCov2022_Base_20230904.csv", header = TRUE)
+x <- rbind(x1_2021,x2_2022)
+
+x$time_factor <- as.factor(x$time)
+x$treatment_factor <- as.factor(x$treatment)
+
+cover_palatable_percentage_aov <- aov(x$palatable_forb_percentage~treatment_factor*time_factor,x)
+cover_unpalatable_percentage_aov <- aov(x$unpalatable_forb_percentage~treatment_factor*time_factor,x)
+summary(cover_palatable_percentage_aov)
+summary(cover_unpalatable_percentage_aov)
+TukeyHSD(cover_palatable_percentage_aov)
+TukeyHSD(cover_unpalatable_percentage_aov)
+summary(x1_2021)
+# Updated in 9/4/2023
+##################################################################
+
+#create a new data frame based on the number of plant species, then add the occurrence data to create a new column
+x <- "a"
+spe_col <- c(rep(x,99))
+spe_num <- c(rep(1,99))
+spe_occur <- data.frame(spe_col,spe_num)
+
 ##############################################
 #Function -- plant species concurrences
 ##############################################
-func_occur<-function(x,sum_occur=0){
-  for(n in 8:ncol(x)){
-    for(m in 1:nrow(x)){
-      if(is.na(x[m,n])==TRUE){
-        sum_occur<-sum_occur
-        m<-m+1}
+func_occur <- function(x,sum_occur=0) {
+  for (n in 8:ncol(x)) {
+    for (m in 1:nrow(x)) {
+      if (is.na(x[m,n]) == TRUE) {
+        sum_occur <- sum_occur
+        m <- m + 1}
       else{
-        sum_occur<-sum_occur+1
-        m<-m+1}
+        sum_occur <- sum_occur + 1
+        m <- m + 1}
     }
-    spe_occur[n-7,1]<-colnames(SpeCov2021_Base)[n]
-    spe_occur[n-7,2]<-sum_occur/nrow(x)
-    sum_occur<-0
-    n=n+1
+    spe_occur[n - 7,1] <- colnames(SpeCov2021_Base)[n]
+    spe_occur[n - 7,2] <- sum_occur/nrow(x)
+    sum_occur <- 0
+    n = n + 1
   }
   return(spe_occur)
 }
 #####################################################
-#2022 11 29
+
+#20230903
+
+#
+#####################################################
 #recalculate the species occurrence
-spe_fre_21<-func_occur(SpeCov2021_Base)
+spe_fre_21 <- func_occur(SpeCov2021_Base)
 length(colnames(SpeCov2021_Base))
 colnames(SpeCov2021_Base)[103]
-spe_fre_21order<-spe_fre_21[order(spe_fre_21[,2],decreasing = T),]
+spe_fre_21order <- spe_fre_21[order(spe_fre_21[,2],decreasing = T),]
 
 spe_freLig_21<-func_occur(SpeCov2021_Ligularia)
 spe_freLig_21order<-spe_freLig_21[order(spe_freLig_21[,2],decreasing = T),]
@@ -174,7 +260,7 @@ spe_freLig_21order<-spe_freLig_21[order(spe_freLig_21[,2],decreasing = T),]
 #####################################################
 #Average cover of base plot 2022 12 04
 #####################################################
-spe_cov_base_ave21<-apply(SpeCov2021_Base_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
+spe_cov_base_ave21 < -apply(SpeCov2021_Base_0[8:103],2,mean,trim=0,options("scipen"=100, "digits"=4))#print format
 #Q: trim'必需是长度必需为一的数值 A:trim=0
 spe_cov_base_se21<-apply(SpeCov2021_Base_0[8:103],2,std.error,options("scipen"=100, "digits"=4))
 # head(spe_cov_base_ave21)

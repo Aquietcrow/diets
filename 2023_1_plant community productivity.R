@@ -41,13 +41,13 @@ library("vioplot")
 library("psych")#corr.test
 library("ggpubr")#for making plots
 library("Rmisc")
-SummerHenan2021_22 <- odbcConnectAccess2007("E:/Access/2021_summer_henan.accdb")
+SummerHenan2021_22 <- odbcConnectAccess2007("E:/Access/2021_summer_henan_20231115.accdb")
 PatchCover2021 <- sqlFetch(SummerHenan2021_22,"2021_summer_henan_patchescover")
 Zokor_2021 <- sqlFetch(SummerHenan2021_22,"2021_summer_henan_sitesinformation")
 PatchCover2022 <- sqlFetch(SummerHenan2021_22,"2022_summer_henan_patchescover")
 
 ############################################################
-#Prepare Bare land patch data                                        
+#Prepare Bare land patch data 20231129                                       
 ############################################################
 #TurnrNA in bare land data to A, because it is base land   
 #is.na(PatchCover2021[,7:56])<-"A"                         
@@ -66,11 +66,11 @@ reNaTA <- function(x,n,m,na.omit=FALSE)
   result<- as.data.frame(x)
   return(result)}
 
-PatchCover2021new<-reNaTA(PatchCover2021,1,7)
-View(PatchCover2021new)
-PatchCo2021Reorder<-PatchCover2021new[order(PatchCover2021new[,1]),]
+PatchCover2021 <- reNaTA(PatchCover2021,1,7)
+View(PatchCover2021)
+PatchCo2021 <- PatchCover2021[order(PatchCover2021[,1]),]
 
-PatchCover2022new <- reNaTA(PatchCover2022[101:400,],1,7) 
+PatchCover2022 <- reNaTA(PatchCover2022[101:400,],1,7) 
 #####################################################################
 CountPatch <- function(x,numA,numB,numC,na.omit=FALSE)
 {for(n in 1:nrow(x))
@@ -97,8 +97,8 @@ m<-m+1}
 # 2022 bare land patch: "7c","7t","10-2c","10-2t","11-3c","11-3t"
 
 
-PatchCo2021Counted<-CountPatch(x=PatchCo2021Reorder,numA = 0,numB = 0,numC = 0) 
-PatchCo2022Counted <- CountPatch(x = PatchCover2022new, numA = 0, numB = 0, numC = 0)
+PatchCo2021Counted <- CountPatch(x= PatchCo2021,numA = 0,numB = 0,numC = 0) 
+PatchCo2022Counted <- CountPatch(x = PatchCover2022, numA = 0, numB = 0, numC = 0)
 # attach(PatchCo2021Counted)
 # detach(PatchCo2021Counted)
 NumASum <- aggregate(PatchCo2021Counted$NumA~fieldcode,data = PatchCo2021Counted,sum)
@@ -117,12 +117,13 @@ colnames(x2)[4]<-"NumC"
 x2$NumAPer<-x2$NumA/2500*100  
 x2$NumBPer<-x2$NumB/2500*100
 x2$NumCPer<-x2$NumC/2500*100
-apply(x2[,5:7],2,range)  
-apply(x2[,5:7],2,mean)  
+apply(x2[-c(25:28),5:7],2,range)  
+apply(x2[-c(25:28),5:7],2,mean)  
 
 PatchCo2021Per <- x2  
 PatchCo2022Per <- x2
 write.csv(PatchCo2022Per, file = "PatchCo2022Per_20230224.csv",row.names = TRUE)
+write.xlsx(PatchCo2021Per,file = "PatchCo2021Per_20231129.xlsx",rownames = FALSE)
 ####################################
 # The outline of my data analysis ##
 ####################################
@@ -169,6 +170,7 @@ zokorNumber_PatchCover$Remaining_number_of_zokor_2021<-zokorNumber_PatchCover$Nu
 zokorNumber_PatchCover$treatment.y[zokorNumber_PatchCover$treatment.x=="c"]<-0
 zokorNumber_PatchCover$treatment.y[zokorNumber_PatchCover$treatment.x=="t"]<-1
 
+
 x4<-1:17
 x5<-Zokor_2021$fieldcode[c(-13,-14)]
 field.no2code<-data.frame(x5,x4)
@@ -187,6 +189,7 @@ field.no2code_func<-function(x,y,n,m){
 x6<-field.no2code_func(zokorNumber_PatchCover,field.no2code,1,1)
 zokorNumber_PatchCover_reg<-x6
 write.csv(x6,file = "field.no2code_20230213.csv",row.names = TRUE)
+
 View(zokorNumber_PatchCover_reg)
 attach(zokorNumber_PatchCover_reg)
 fit1<-lm(Number_of_zokor_in_2021~NumBPer,data = zokorNumber_PatchCover_reg)

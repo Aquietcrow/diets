@@ -2,7 +2,7 @@ library(ggplot2)
 library(ggpubr)
 library(Rmisc)
 library(plotrix)
-
+setwd("E:/r_data_dit")
 bare_2022 <- read.csv("zokorNumber_PatchCover_reg20230306.csv",header = TRUE,sep = ",")
 bare_2022$Vegetated_Per_2022 <- (100 - bare_2022$NumBPer_2022)
 bare_2022$NumBPer_2022 <- bare_2022$NumBPer_2022*100
@@ -40,91 +40,93 @@ zokor2$treatment_year_1 <- factor( c("+zokor 2021","+zokor 2021","-zokor 2021","
 factor(zokor2$treatment_year_1)
 zokor2$number_type_1 <- factor(zokor2$number_type, levels = c("Killed zokor","Remaining zokor"))
 
-Bio_1<-read.csv("Bio.csv",header = TRUE, sep = ",")
-Bio_1$time_factor <- factor(Bio$Year, labels = c("2021","2022"))
-Bio_1$treatment_factor <- factor(Bio$Treatment, labels = c("+zokor","-zokor"))
-
+Bio_1 <- read.csv("Bio.csv",header = TRUE, sep = ",")
+Bio_11$time_factor <- factor(Bio_1$Year, labels = c("2021","2022"))
+Bio_11$treatment_factor <- factor(Bio_1$Treatment, labels = c("+zokor","-zokor"))
+Bio_1copy<-Bio_1
+Bio_1 <- Bio_11
 # Biomass
-plot1 <- ggplot(Bio_1, aes(x = time_factor, y = Bio_1$graminoid1m_mean, fill = treatment_factor)) +
+plot1 <- ggplot(Bio_11, aes(x = time_factor, y = Bio_11$graminoid1m_mean, fill = treatment_factor)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Year", y = "Graminoid Biomass (g/m2)") +
-  geom_errorbar(aes(x = time_factor, ymin= Bio_1$graminoid1m_mean - Bio_1$graminoid1m_sd, ymax=Bio_1$graminoid1m_mean + Bio_1$graminoid1m_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
-  geom_text(aes(y = Bio_1$graminoid1m_mean + 2.3*Bio_1$graminoid1m_sd, label = plot1_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
-  theme(legend.position = "none") +
+  geom_errorbar(aes(x = time_factor, ymin= Bio_11$graminoid1m_mean - Bio_11$graminoid1m_sd, ymax=Bio_11$graminoid1m_mean + Bio_11$graminoid1m_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
+  geom_text(aes(y = Bio_11$graminoid1m_mean + 2.3*Bio_11$graminoid1m_sd, label = plot1_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
+  theme(legend.position = "bottom") +
   theme(axis.text = element_text(size = 12, face = "bold"), 
         title = element_text(size = 15, face = "bold"),
-        legend.text = element_text(size = 12, face = "bold") ) +
-  labs(title = "A")
+        legend.text = element_text(size = 12, face = "bold") )+
+  theme(legend.title = element_blank())
 plot1_label <- c("a","a","a","a")
 
 
 
 
-plot2 <- ggplot(Bio_1, aes(x = time_factor, y = Bio_1$forbs1m_mean, fill = treatment_factor)) +
+plot2 <- ggplot(Bio_11, aes(x = time_factor, y = Bio_11$forbs1m_mean, fill = treatment_factor)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Year", y = "Forb Biomass (g/m2)")+
-  geom_errorbar(aes(x = time_factor, ymin= Bio_1$forbs1m_mean - Bio_1$forbs1m_sd, ymax=Bio_1$forbs1m_mean + Bio_1$forbs1m_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
-  geom_text(aes(y = Bio_1$forbs1m_mean + 2.3*Bio_1$forbs1m_sd, label = plot2_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
-  theme(legend.position = "none") +
-  theme(axis.text = element_text(size = 12, face = "bold"), 
-        title = element_text(size = 15, face = "bold"),
-        legend.text = element_text(size = 12, face = "bold") ) +
-  labs(title = "B")
-plot2_label <- c("ab","a","bc","c")
-
-
-plot3 <- ggplot(Bio_1, aes(x = time_factor, y = Bio_1$total_biomass1m_mean, fill = treatment_factor)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Year", y = "Total Biomass (g/m2)")+
-  geom_errorbar(aes(x = time_factor, ymin= Bio_1$total_biomass1m_mean - Bio_1$total_biomass1m_sd, ymax= Bio_1$total_biomass1m_mean + Bio_1$total_biomass1m_sd),stat = "identity" , position = position_dodge(0.8),width = .1) +
-  geom_text(aes(y = Bio_1$total_biomass1m_mean + 2.3*Bio_1$total_biomass1m_sd, label = plot3_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
-  theme(legend.position = "none") +
-  theme(axis.text = element_text(size = 12, face = "bold"), 
-        title = element_text(size = 15, face = "bold"),
-        legend.text = element_text(size = 12, face = "bold") ) +
-  labs(title = "C")
-plot3_label <- c("ab","a","b","b")
-
-plot4 <- ggplot(Bio_1, aes(x = time_factor, y = Bio_1$graminoid1m_weighted_mean, fill = treatment_factor)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Year", y = "Weighted Graminoid Biomass (g/m2)")+
-  geom_errorbar(aes(x = time_factor, ymin= Bio_1$graminoid1m_weighted_mean - Bio_1$graminoid1m_weighted_sd, ymax= Bio_1$graminoid1m_weighted_mean + Bio_1$graminoid1m_weighted_sd),stat = "identity" , position = position_dodge(0.8),width = .1) +
-  geom_text(aes(y = Bio_1$graminoid1m_weighted_mean + 2.3*Bio_1$graminoid1m_weighted_sd, label = plot4_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
+  geom_errorbar(aes(x = time_factor, ymin= Bio_11$forbs1m_mean - Bio_11$forbs1m_sd, ymax=Bio_11$forbs1m_mean + Bio_11$forbs1m_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
+  geom_text(aes(y = Bio_11$forbs1m_mean + 2.3*Bio_11$forbs1m_sd, label = plot2_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
   theme(legend.position = "bottom") +
   theme(axis.text = element_text(size = 12, face = "bold"), 
         title = element_text(size = 15, face = "bold"),
         legend.text = element_text(size = 12, face = "bold") ) +
-  theme(legend.title = element_blank() )+
-  labs(title = "D")
+  theme(legend.title = element_blank())
+plot2_label <- c("ab","a","bc","c")
+
+
+plot3 <- ggplot(Bio_11, aes(x = time_factor, y = Bio_11$total_biomass1m_mean, fill = treatment_factor)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Total Biomass (g/m2)")+
+  geom_errorbar(aes(x = time_factor, ymin= Bio_11$total_biomass1m_mean - Bio_11$total_biomass1m_sd, ymax= Bio_11$total_biomass1m_mean + Bio_11$total_biomass1m_sd),stat = "identity" , position = position_dodge(0.8),width = .1) +
+  geom_text(aes(y = Bio_11$total_biomass1m_mean + 2.3*Bio_11$total_biomass1m_sd, label = plot3_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
+  theme(legend.position = "bottom") +
+  theme(axis.text = element_text(size = 12, face = "bold"), 
+        title = element_text(size = 15, face = "bold"),
+        legend.text = element_text(size = 12, face = "bold") ) +
+  theme(legend.title = element_blank())
+plot3_label <- c("ab","a","b","b")
+
+plot4 <- ggplot(Bio_11, aes(x = time_factor, y = Bio_11$graminoid1m_weighted_mean, fill = treatment_factor)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Weighted Graminoid Biomass (g/m2)")+
+  geom_errorbar(aes(x = time_factor, ymin= Bio_11$graminoid1m_weighted_mean - Bio_11$graminoid1m_weighted_sd, ymax= Bio_11$graminoid1m_weighted_mean + Bio_11$graminoid1m_weighted_sd),stat = "identity" , position = position_dodge(0.8),width = .1) +
+  geom_text(aes(y = Bio_11$graminoid1m_weighted_mean + 2.3*Bio_11$graminoid1m_weighted_sd, label = plot4_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
+  theme(legend.position = "bottom") +
+  theme(axis.text = element_text(size = 12, face = "bold"), 
+        title = element_text(size = 15, face = "bold"),
+        legend.text = element_text(size = 12, face = "bold") ) +
+  theme(legend.title = element_blank() )
 plot4_label <- c("a","a","a","a")
 
 
-plot5 <- ggplot(Bio_1, aes(x = time_factor, y = Bio_1$forbs1m_weighted_mean, fill = treatment_factor)) +
+plot5 <- ggplot(Bio_11, aes(x = time_factor, y = Bio_11$forbs1m_weighted_mean, fill = treatment_factor)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Year", y = "Weighted Forb Biomass (g/m2)")+
-  geom_errorbar(aes(x = time_factor, ymin= Bio_1$forbs1m_weighted_mean - Bio_1$forbs1m_weighted_sd, ymax= Bio_1$forbs1m_weighted_mean + Bio_1$forbs1m_weighted_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
-  geom_text(aes(y = Bio_1$forbs1m_weighted_mean + 2.3*Bio_1$forbs1m_weighted_sd, label = plot5_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
-  theme(legend.position = "none") +
+  geom_errorbar(aes(x = time_factor, ymin= Bio_11$forbs1m_weighted_mean - Bio_11$forbs1m_weighted_sd, ymax= Bio_11$forbs1m_weighted_mean + Bio_11$forbs1m_weighted_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
+  geom_text(aes(y = Bio_11$forbs1m_weighted_mean + 2.3*Bio_11$forbs1m_weighted_sd, label = plot5_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
+  theme(legend.position = "bottom") +
   theme(axis.text = element_text(size = 12, face = "bold"), 
         title = element_text(size = 15, face = "bold"),
         legend.text = element_text(size = 12, face = "bold") ) +
-  labs(title = "E")
+  theme(legend.title = element_blank())
 plot5_label <- c("ab","a","b","b")
 
-plot6 <- ggplot(Bio_1, aes(x = time_factor, y = Bio_1$total_biomass1m_weighted_mean, fill = treatment_factor)) +
+plot6 <- ggplot(Bio_11, aes(x = time_factor, y = Bio_11$total_biomass1m_weighted_mean, fill = treatment_factor)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Year", y = "Weighted Total Biomass (g/m2)")+
-  geom_errorbar(aes(x = time_factor, ymin= Bio_1$total_biomass1m_weighted_mean - Bio_1$total_biomass1m_weighted_sd, ymax= Bio_1$total_biomass1m_weighted_mean + Bio_1$total_biomass1m_weighted_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
-  geom_text(aes(y = Bio_1$total_biomass1m_weighted_mean + 2.3*Bio_1$total_biomass1m_weighted_sd, label = plot6_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
-  theme(legend.position = "none")+
+  geom_errorbar(aes(x = time_factor, ymin= Bio_11$total_biomass1m_weighted_mean - Bio_11$total_biomass1m_weighted_sd, ymax= Bio_11$total_biomass1m_weighted_mean + Bio_11$total_biomass1m_weighted_sd),stat = "identity" , position = position_dodge(0.8),width = .1)+
+  geom_text(aes(y = Bio_11$total_biomass1m_weighted_mean + 2.3*Bio_11$total_biomass1m_weighted_sd, label = plot6_label), position = position_dodge(0.9), size = 5, fontface = "bold") +
+  theme(legend.position = "bottom")+
   theme(axis.text = element_text(size = 12, face = "bold"), 
         title = element_text(size = 15, face = "bold"),
         legend.text = element_text(size = 12, face = "bold") ) +
-  labs(title = "F")
+  theme(legend.title = element_blank())
 plot6_label <- c("ab","a","b","b")
 
 write.csv(zokor2, file = "zokor2.csv", row.names = TRUE)
 #########################################################################################################
+zokor2<-read.csv("zokor2.csv",header = TRUE,sep = ",")
+
 p1 <- ggplot(zokor2,aes(x = zokor2$treatment_year_1,y = zokor2$number,fill = zokor2$number_type_1)) +
   geom_col(color = "black", width = .6, position = "stack") + 
   scale_fill_brewer(palette = "Set3") +
@@ -136,8 +138,7 @@ p1 <- ggplot(zokor2,aes(x = zokor2$treatment_year_1,y = zokor2$number,fill = zok
         title = element_text(size = 15, face = "bold"),
         legend.text = element_text(size = 12, face = "bold") ) +
   labs(x = "Treatments") +
-  geom_errorbar(aes(ymin = zokor2$number_sd_min, ymax = zokor2$number_sd_max),stat = "identity",position = position_dodge(0),width = .1) +
-  labs(title = "G")
+  geom_errorbar(aes(ymin = zokor2$number_sd_min, ymax = zokor2$number_sd_max),stat = "identity",position = position_dodge(0),width = .1) 
 p1
 
 area1 <- read.csv("area1.csv",header = TRUE,sep = ",")
@@ -156,8 +157,7 @@ p2 <- ggplot(area1, aes(x=area1$treatment_year_1, y = area1$NumBPer)) +
         title = element_text(size = 15, face = "bold"),
         legend.text = element_text(size = 12, face = "bold") ) +
   labs(x = "Treatments") +
-  geom_errorbar(aes(ymin = area1$NumBPer - area1$NumBPer_sd, ymax = area1$NumBPer + area1$NumBPer_sd),stat = "identity",position = position_dodge(0),width = .1) +
-  labs(title = "H")
+  geom_errorbar(aes(ymin = area1$NumBPer - area1$NumBPer_sd, ymax = area1$NumBPer + area1$NumBPer_sd),stat = "identity",position = position_dodge(0),width = .1) 
 p2
 p3 <- ggplot(area1, aes(x = area1$treatment_year_1, y = area1$Vegetated_Per)) +
   geom_point(color = "black", size = 3, stat = "identity") +
@@ -169,14 +169,23 @@ p3 <- ggplot(area1, aes(x = area1$treatment_year_1, y = area1$Vegetated_Per)) +
   theme(legend.position = "bottom") +
   theme(legend.title = element_blank()) +
   labs(x = "Treatments") +
-  geom_errorbar(aes(ymin = area1$Vegetated_Per - area1$Vegetated_Per_sd, ymax = area1$Vegetated_Per + area1$Vegetated_Per_sd),stat = "identity",position = position_dodge(0),width = .1) +
-  labs(title = "I")
+  geom_errorbar(aes(ymin = area1$Vegetated_Per - area1$Vegetated_Per_sd, ymax = area1$Vegetated_Per + area1$Vegetated_Per_sd),stat = "identity",position = position_dodge(0),width = .1)
 p3
 
 plot_combined<- multiplot(plot1,plot4,p1,plot2,plot5,p2,plot3,plot6,p3,cols = 3)
-write.csv(Bio2,file = "Bio2_20230308.csv", row.names = TRUE )
+
 ggsave("plot_combined.tiff",plot_combined, width = 16, height = 16 )
 #type 1
+ggsave("plot1.tiff", plot1,width=5,height = 5)
+ggsave("plot2.tiff", plot2,width=5,height = 5)
+ggsave("plot3.tiff", plot3,width=5,height = 5)
+ggsave("plot4.tiff", plot4,width=5,height = 5)
+ggsave("plot5.tiff", plot5,width=5,height = 5)
+ggsave("plot6.tiff", plot6,width=5,height = 5)
+ggsave("p1.tiff", p1,width=7,height = 7)
+ggsave("p2.tiff", p2,width=5,height = 5)
+ggsave("p3.tiff", p3,width=5,height = 5)
+write.csv(Bio2,file = "Bio2_20230308.csv", row.names = TRUE )
 Bio2_1 <- Bio2[,c(2, 3, 5, 4,49:51,60:62)]
 Bio2_2 <- Bio2[,c(2, 3, 5, 13,52:54,76:78)]
 Bio_name <- c("code","treatment_code","dominantplants","time","graminoid1m","forbs1m","totalbiomass1m","graminoid1m_weighted","forbs1m_weighted","totalbiomass1m_weighted")
