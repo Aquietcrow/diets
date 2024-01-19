@@ -56,12 +56,13 @@ FailedfieldNoall <- c(FailedfieldNo1,FailedfieldNo2,FailedfieldNo3,FailedfieldNo
 Biomas2021_22 <- Biomas2021_22[-FailedfieldNoall,]
 ##################################################################
 # subplot_inform <- SpeCov2021_dele_failedfields[2:4] #Extract the subplot functional group information from 2021's data.
+subplot_inform <- read.csv("subplot_inform_20230215.csv",header = TRUE)
 str(grepl("c",subplot_inform$fieldcode))
 subplot_inform$treatment <- grepl("c",subplot_inform$fieldcode)
 #control flow
-subplot_inform$treatment[subplot_inform$treatment == TRUE] <-"c"
-subplot_inform$treatment[subplot_inform$treatment == FALSE] <-"t"
-subplot_inform$field.no <- substring(subplot_inform$fieldcode,1,nchar(subplot_inform$fieldcode)-1)
+subplot_inform$treatment[subplot_inform$treatment == TRUE] <- "c"
+subplot_inform$treatment[subplot_inform$treatment == FALSE] <- "t"
+subplot_inform$field.no <- substring(subplot_inform$fieldcode,1,nchar(subplot_inform$fieldcode) - 1)
 subplot_inform$treatment_code[subplot_inform$treatment == "c"] <- 0
 subplot_inform$treatment_code[subplot_inform$treatment == "t"] <- 1
 
@@ -78,7 +79,8 @@ subplot_inform_20230221 <- field.no2code_func(subplot_inform,field.no2code,5,1,1
 
 write.csv(subplot_inform_20230221,file = "subplot_inform_20230221.csv",row.names = TRUE)
 
-Biomas2021_22_mergedsubplot<-merge(Biomas2021_22,subplot_inform_20230221,by="subplot") 
+
+Biomas2021_22_mergedsubplot <- merge(Biomas2021_22,subplot_inform_20230221,by = "subplot") 
 
 names(Biomas2021_22_mergedsubplot)[16] <- "functionalgroup"
 names(Biomas2021_22_mergedsubplot)[15] <- "fieldcode"
@@ -119,46 +121,55 @@ Biomas2021_22_reg <- subset(Biomas2021_22_full_0,Biomas2021_22_full_0$functional
 ##################
 #deal with missing data 20230220
 ##################
-#1c-4q-1;1c-4q-2
+#1c-4q-1;1c-4q-2 sedge [2021]
 write.csv(e1,file = "e1_20230221.csv",row.names = TRUE)
-f1 <- e1[101:106,5]
+e1 <- read.csv("E:/r_data_dit/e1_20230221.csv",header = TRUE)
+f1 <- e1[101:106,6]
+# f1 <- c(0.00, 0.13, 0.25, 0.19, 0.00, 0.42)
 g1 <- round(mean(f1), digits = 2)
-e1[107:108,5] <- c(g1,g1)
+e1[107:108,6] <- c(g1,g1)#0.16g
 
-#1t-3q-2
-f2 <- c(e1[109:113,5],e1[115:116,5])
+#1t-3q-2 sedge [2021]
+f2 <- c(e1[109:113,6],e1[115:116,6])
+# f2<- c(0.20, 0.09, 0.49, 0.49, 0.53, 0.00, 0.28)
 g2 <- round(mean(f2), digits = 2)
-e1[114,5] <- g2
+e1[114,6] <- g2#0.3
 
-#10-2c-4q-1
-f3 <- c(e1[1:6,5],e1[8,5])
+#10-2c-4q-1 sedge [2021]
+f3 <- c(e1[1:6,6],e1[8,6])
+# f3 <-c(1.60, 4.01, 3.78, 2.54, 3.16, 1.31, 0.46)
 g3 <- round(mean(f3),digits = 2)
-e1[7,5] <- g3
+e1[7,6] <- g3#2.41g
 
-#11-4t-1q-3
-f4 <- c(e1[42,5],e1[44:49,5])
+#11-4t-1q-3 sedge [2021]
+f4 <- c(e1[42,6],e1[44:49,6])
+# f4 <- c(0.54, 3.67, 0.55, 0.59, 0.24, 0.46, 0.27)
 g4 <- round(mean(f4),digits = 2)
-e1[43,5] <- g4
+e1[43,6] <- g4#0.9g
 
-#12c-4q-4
-f5 <- e1[50:56,5]
+#12c-4q-4 sedge [2021]
+f5 <- e1[50:56,6]
+# f5 <-c(3.31, 1.28, 3.35, 0.22, 0.00, 0.54, 0.00)
 g5 <- round(mean(f5),digits = 2)
-e1[57,5] <- g5
+e1[57,6] <- g5#1.24g
 
-#41t-2q-2
-f6 <- c(e1[162:163,4],e1[165:166,4])
+#41t-2q-2 grass [2021]
+f6 <- c(e1[162:163,5],e1[165:166,5])
+#f6 <- c(5.58, 9.46, 3.93, 4.44)
 g6 <- round(mean(f6),digits = 2)
-e1[164,4] <- g6 
+e1[164,5] <- g6 #5.85g
 
-#41t-4q-2
-f7 <- e1[162:165,5]
+#41t-4q-2 sedge [2021]
+f7 <- e1[162:165,6]
+#f7<-c(1.98, 1.26, 0.27, 1.39)
 g7 <- round(mean(f7),digits = 2)
-e1[166,5] <- g7
+e1[166,6] <- g7#1.23g
 
-#12c-3q-2
-f8 <- c(e1[50:53,19],e1[55:57,19])
+#12c-3q-2 sedge [2022]
+f8 <- c(e1[50:53,20],e1[55:57,20])
+#f8<-c(2.92, 7.24, 6.02, 4.63, 3.34, 0.08, 0.26)
 g8 <- round(mean(f8), digits = 2)
-e1[54,19] <- g8
+e1[54,20] <- g8 #(3.5g)
 h1 <- c(g1,g2,g3,g4,g5,g6,g7,g8)
 
 # x1 <- grep("1c-4q-1",Biomas2021_22_reg$subplot,fixed = TRUE)
